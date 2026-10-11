@@ -78,22 +78,81 @@ export function calculateMetrics(state: FinancialState): CalculatedMetrics {
   const dailyAllowance = Math.max(uncommittedCash, 0) / divisor;
   const dailyAllowanceWithGoals = Math.max(availableCash - unpaidReservedCommitments, 0) / divisor;
 
-  // Today's spending
+  // ---------------------------------------------------------------------------
+  // TIMELINE SEMANTICS & PARTITIONING:
+  // In a cycle of totalDays (e.g. 30):
+  // 1. Completed historical days strictly prior to today:
+  //    completedDays = Math.max(0, cycle.currentDay - 1)
+  //    (Day 1 => 0 completed days; Day 8 => 7 completed days; Day 30 => 29 completed days)
+  // 2. Today:
+  //    cycle.currentDay
+  // 3. Strictly future remaining days after today:
+  //    futureRemainingDays = Math.max(0, cycle.totalDays - cycle.currentDay)
+  //    (Day 1 => 29 future days; Day 8 => 22 future days; Day 30 => 0 future days)
+  // Non-overlapping invariant: completedDays + 1 + futureRemainingDays = cycle.totalDays.
+  // ---------------------------------------------------------------------------
+
+  // Today's spending (transactions occurring on cycle.currentDay):
   const todaysSpent = expenseTransactions
     .filter(t => t.day === cycle.currentDay)
     .reduce((sum, t) => sum + t.amount, 0);
 
-  // Average daily spent over elapsed days (Days 1 to currentDay - 1, or currentDay)
-  const daysElapsed = Math.max(cycle.currentDay - 1, 1);
-  const averageDailySpent = actualExpenses / daysElapsed;
+  // Completed historical expenses strictly prior to today (Days 1 to currentDay - 1):
+  const completedHistoricalExpenses = expenseTransactions
+    .filter(t => t.day < cycle.currentDay)
+    .reduce((sum, t) => sum + t.amount, 0);
 
-  // Projected variable burn for remaining days
-  // If user continues spending at their observed average daily rate:
-  const expectedRemainingVariableExpenses = averageDailySpent * remainingDays;
-  
-  // Deterministic Projected End-of-Cycle Balance:
-  // projectedBalance = availableCash - unpaidReservedCommitments - expectedRemainingVariableExpenses
-  const projectedMonthEndBalance = Math.round(availableCash - unpaidReservedCommitments - expectedRemainingVariableExpenses);
+  const completedDays = Math.max(0, cycle.currentDay - 1);
+  const futureRemainingDays = Math.max(0, cycle.totalDays - cycle.currentDay);
+
+  // Sustainable neutral daily budget pace across the full 30-day cycle:
+  const neutralDailyBudget = startingBudget / Math.max(cycle.totalDays, 1);
+
+  // Raw average daily spend observed over completed days:
+  const rawAverageDailySpent = completedDays > 0
+    ? completedHistoricalExpenses / completedDays
+    : 0;
+
+  // ---------------------------------------------------------------------------
+  // INSUFFICIENT HISTORY & CREDIBILITY BLENDING POLICY:
+  // On Day 1 (completedDays = 0):
+  // There are zero completed days of spending history. Under core personal finance
+  // principles, any transaction on Day 1 is an isolated purchase (e.g. a ₹100 book),
+  // NOT an established recurring daily expense. Extrapolating a single Day 1 expense
+  // across all 29 remaining days would erroneously penalize the month-end forecast by ₹2,900.
+  // Instead:
+  // - All transactions up to today are already deducted once from availableCash.
+  // - Upcoming obligations (bills, subscriptions) are modeled via their actual schedule in commitments.
+  // - Credibility factor: weight = min(1.0, completedDays / 3.0).
+  //   - Day 1 (0 days): weight = 0.0 (isolated transaction; 0 future extrapolation).
+  //   - Day 2 (1 day):  weight = 0.33 (smooth Bayesian transition).
+  //   - Day 3 (2 days): weight = 0.67.
+  //   - Day 4+ (3+ d):  weight = 1.0 (100% empirical historical run rate).
+  // ---------------------------------------------------------------------------
+  const historyConfidenceWeight = completedDays >= 3 ? 1.0 : completedDays / 3.0;
+  const effectiveFutureDailyBurn = historyConfidenceWeight * rawAverageDailySpent;
+
+  // Projected variable burn for genuine future days strictly after today:
+  const expectedRemainingVariableExpenses = effectiveFutureDailyBurn * futureRemainingDays;
+
+  // Deterministic Projected Month-End Balance:
+  // projectedMonthEndBalance = availableCash - unpaidReservedCommitments - expectedRemainingVariableExpenses
+  //
+  // Invariants:
+  // 1. Clean State Day 1 with ₹0 expenses: availableCash (10,000) - commitments (0) - burn (0) = ₹10,000.
+  // 2. Clean State Day 1 with ₹100 expense: availableCash (9,900) - commitments (0) - burn (0) = ₹9,900 (exact -₹100 delta).
+  // 3. Clean State Day 1 with ₹250 2nd expense: availableCash (9,650) - commitments (0) - burn (0) = ₹9,650 (exact -₹250 delta).
+  // 4. Day 8 Seeded Demo: 8,561 cash - 1,338 commitments - (205.57 * 22 = 4,523) = ₹2,700 surplus.
+  // 5. Day 30 boundary condition: futureRemainingDays = 0, so forecast = availableCash - unpaidReservedCommitments.
+  const projectedMonthEndBalance = Math.round(
+    availableCash - unpaidReservedCommitments - expectedRemainingVariableExpenses
+  );
+
+  // For display / analytics: report observed historical average once history exists;
+  // on Day 1 (0 completed days), report actual Day 1 expenses if spent, or neutral budget baseline if 0 expenses.
+  const averageDailySpent = completedDays > 0
+    ? rawAverageDailySpent
+    : (actualExpenses > 0 ? actualExpenses : neutralDailyBudget);
 
   // Burn rate status compared to sustainable allowance
   let burnRateStatus: 'under' | 'on_track' | 'over' = 'on_track';
@@ -185,6 +244,7 @@ export function calculateMetrics(state: FinancialState): CalculatedMetrics {
     projectedMonthEndBalance,
     todaysSpent,
     averageDailySpent,
+    effectiveFutureDailyBurn,
     burnRateStatus,
     healthScore: riskAssessment.score,
     previousHealthScore,

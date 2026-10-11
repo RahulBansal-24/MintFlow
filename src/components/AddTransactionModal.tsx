@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { X } from 'lucide-react';
 import { useFinancial } from '../context/FinancialContext';
@@ -18,6 +18,17 @@ export const AddTransactionModal: React.FC<AddTransactionModalProps> = ({ isOpen
   const [day, setDay] = useState<number>(state.cycle.currentDay);
   const [isEssential, setIsEssential] = useState(false);
   const [notes, setNotes] = useState('');
+
+  useEffect(() => {
+    if (!isOpen) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        onClose();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isOpen, onClose]);
 
   if (!isOpen) return null;
 

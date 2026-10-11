@@ -35,6 +35,17 @@ const MainAppContent: React.FC = () => {
     setIsOnboardingOpen(false);
   };
 
+  React.useEffect(() => {
+    if (!simulatorModalDecision) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        setSimulatorModalDecision(null);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [simulatorModalDecision]);
+
   return (
     <div className="min-h-screen bg-[#080B12] text-slate-100 flex flex-col lg:flex-row">
       {/* Desktop Collapsible Sidebar */}

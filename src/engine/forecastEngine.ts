@@ -52,7 +52,7 @@ export function generateForecastData(state: FinancialState): {
       optimisticBalance: runningActualCash,
       dailySpendExpected: dayExpenses,
       isHistorical: true,
-      eventLabel: d === currentDay ? 'Today (Day 8)' : undefined
+      eventLabel: d === currentDay ? `Today (Day ${currentDay})` : undefined
     });
   }
 
@@ -61,8 +61,8 @@ export function generateForecastData(state: FinancialState): {
   const currentCash = runningActualCash;
 
   // Daily variable spend rates for 3 scenarios:
-  // Expected: averageDailySpent so far
-  const expectedBurn = metrics.averageDailySpent;
+  // Expected: effectiveFutureDailyBurn from credibility-blended policy
+  const expectedBurn = metrics.effectiveFutureDailyBurn;
   // Conservative: 25% higher burn rate (impulsive weekend spikes)
   const conservativeBurn = expectedBurn * 1.25;
   // Optimistic: 20% leaner burn rate (mindful student budgeting)
@@ -104,7 +104,9 @@ export function generateForecastData(state: FinancialState): {
     {
       name: 'Strategy A: Baseline Pace',
       tagline: 'Continue current daily pace',
-      description: `Maintain your average ₹${Math.round(metrics.averageDailySpent)}/day spending and pay all scheduled bills on time.`,
+      description: metrics.effectiveFutureDailyBurn > 0
+        ? `Maintain your average ₹${Math.round(metrics.effectiveFutureDailyBurn)}/day spending and pay all scheduled bills on time.`
+        : `Pace your variable spending mindfully within your ₹${Math.round(metrics.dailyAllowance)}/day allowance and pay all scheduled bills on time.`,
       endBalance: Math.round(simExpected),
       dailyAllowance: Math.round(metrics.dailyAllowance),
       savingsTotal: totalSavedGoals,

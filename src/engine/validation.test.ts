@@ -8,6 +8,7 @@ import {
 } from './validation';
 import { loadFinancialState, saveFinancialState, resetFinancialState } from './storage';
 import { INITIAL_FINANCIAL_STATE, FRESH_START_FINANCIAL_STATE } from './seedData';
+import { simulateDecision } from './scenarioEngine';
 
 describe('MINTFLOW Input Sanitization & Storage Validation', () => {
   describe('validateFinancialAmount', () => {
@@ -136,6 +137,72 @@ describe('MINTFLOW Input Sanitization & Storage Validation', () => {
       const fresh = resetFinancialState('fresh');
       expect(fresh.cycle.currentDay).toBe(1);
       expect(fresh.transactions.length).toBe(0);
+    });
+  });
+
+  describe('Simulation Decision Integrity & Anti-Double-Counting Rules', () => {
+    it('cancelling a subscription accurately frees future payments without altering past records', () => {
+      const originalState = JSON.parse(JSON.stringify(INITIAL_FINANCIAL_STATE));
+      const targetSub = originalState.commitments.find((c: any) => c.id === 'comm-2')!; // YouTube Premium ₹189
+      
+      const result = simulateDecision(originalState, {
+        type: 'cancel_subscription',
+        amount: targetSub.amount,
+        title: 'Cancel YouTube Premium',
+        category: 'bills',
+        isEssential: false,
+        targetCommitmentId: targetSub.id
+      });
+
+      // Cash in hand stays identical today
+      expect(result.deltaAvailableCash).toBe(0);
+      // Uncommitted cash increases by ₹189 because the reserved obligation is cancelled
+      expect(result.deltaUncommittedCash).toBe(189);
+      expect(result.after.unpaidReservedCommitments).toBe(1338 - 189);
+      // Daily allowance increases
+      expect(result.deltaDailyAllowance).toBeGreaterThan(0);
+      expect(result.verdict.tone).toBe('positive');
+    });
+
+    it('paying a scheduled bill removes reservation and creates an expense without double counting', () => {
+      const originalState = JSON.parse(JSON.stringify(INITIAL_FINANCIAL_STATE));
+      const targetBill = originalState.commitments.find((c: any) => c.id === 'comm-1')!; // Hostel Wi-Fi ₹800
+      
+      const result = simulateDecision(originalState, {
+        type: 'pay_bill',
+        amount: targetBill.amount,
+        title: 'Pay Hostel Wi-Fi',
+        category: 'bills',
+        isEssential: true,
+        targetCommitmentId: targetBill.id
+      });
+
+      // Available cash drops by 800 (bill is physically paid)
+      expect(result.deltaAvailableCash).toBe(-800);
+      // Reserved obligations drop by 800
+      expect(result.after.unpaidReservedCommitments).toBe(1338 - 800);
+      // Crucial: Uncommitted cash remains invariant (already earmarked)
+      expect(result.deltaUncommittedCash).toBe(0);
+      expect(Math.round(result.deltaDailyAllowance)).toBe(0);
+    });
+
+    it('transferring cash to a savings goal protects funds without counting as an expense', () => {
+      const originalState = JSON.parse(JSON.stringify(INITIAL_FINANCIAL_STATE));
+      const result = simulateDecision(originalState, {
+        type: 'save_goal',
+        amount: 500,
+        title: 'Emergency Cushion Deposit',
+        category: 'other',
+        isEssential: true,
+        targetGoalId: 'goal-1'
+      });
+
+      // Available cash in bank is untouched (it is an asset transfer, not consumption)
+      expect(result.deltaAvailableCash).toBe(0);
+      // Uncommitted spendable runway drops by 500
+      expect(result.deltaUncommittedCash).toBe(-500);
+      // Expenses are NOT inflated
+      expect(result.after.actualExpenses).toBe(result.before.actualExpenses);
     });
   });
 });

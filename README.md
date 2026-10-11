@@ -242,13 +242,34 @@ $$A_{goals\_paused} = \frac{\max(C_{avail} - B_{reserved}, 0)}{D_{rem}}$$
 
 ### Deterministic Forecast Model
 
-#### Average Observed Daily Spend ($\overline{E}_{daily}$)
-$$\overline{E}_{daily} = \frac{\sum E_{actual}}{\max(D_{current} - 1, 1)}$$
+#### Non-Overlapping Timeline Partitioning
+In a cycle of $T = 30$ total days at current day $D_{current}$:
+- **Completed Historical Days ($D_{completed}$):** $\max(0, D_{current} - 1)$ (strictly prior to today).
+- **Current Day:** $D_{current}$ (expenses already paid today are deducted once from Available Cash).
+- **Future Remaining Days ($D_{future}$):** $\max(0, 30 - D_{current})$ (strictly future days after today).
+- **Partition Invariant:** $D_{completed} + 1 + D_{future} = 30$ (eliminates double-counting of today's spending).
+
+#### Completed Historical Daily Burn ($\overline{E}_{completed}$)
+The empirical daily burn rate observed over completed days:
+$$\overline{E}_{completed} = \begin{cases} \frac{\sum E_{completed}}{D_{completed}}, & D_{completed} > 0 \\ 0, & D_{completed} = 0 \end{cases}$$
 - *Demo Example (Day 8):* $\frac{1,439}{7} = \mathbf{₹205.57\text{/day}}$.
 
+#### Insufficient History Credibility Weighting ($w_{cred}$)
+To prevent isolated one-time purchases (e.g., a ₹100 book on Day 1) from being falsely extrapolated into a 30-day recurring daily expense (which previously caused a disproportionate ₹3,100 drop), MINTFLOW applies Bayesian credibility weighting:
+$$w_{cred} = \min\left(1.0, \frac{D_{completed}}{3.0}\right)$$
+- **Day 1 ($D_{completed} = 0$):** $w_{cred} = 0.0$ (isolated transaction; 0 future extrapolation).
+- **Days 2–3:** Smoothly ramps confidence ($w_{cred} = 0.33, 0.67$) without cliff-edges.
+- **Day 4+ ($D_{completed} \ge 3$):** Full empirical confidence ($w_{cred} = 1.0$).
+
+#### Effective Future Daily Variable Burn ($B_{future}$)
+$$B_{future} = w_{cred} \times \overline{E}_{completed}$$
+
 #### Projected Month-End Balance ($P_{balance}$)
-$$P_{balance} = \text{round}\left(C_{avail} - B_{reserved} - (\overline{E}_{daily} \times D_{rem})\right)$$
-- *Demo Example (Day 8):* $8,561 - 1,338 - (205.57 \times 23) = 7,223 - 4,728.11 = \mathbf{+₹2,495}$ (safe surplus).
+$$P_{balance} = \text{round}\left(C_{avail} - B_{reserved} - (B_{future} \times D_{future})\right)$$
+- *Demo Example (Day 8):* $8,561 - 1,338 - (205.57 \times 22) = 7,223 - 4,522.57 = \mathbf{+₹2,700}$ (healthy surplus).
+- *Clean Slate (Day 1 with ₹0 expenses):* $10,000 - 0 - (0 \times 29) = \mathbf{₹10,000}$.
+- *Clean Slate (Day 1 with ₹100 expense):* $9,900 - 0 - (0 \times 29) = \mathbf{₹9,900}$ (exact **-₹100** delta; one-time expense deducted once).
+- *Day 30 Boundary Invariant:* When $D_{current} = 30$, $D_{future} = 0$, so $P_{balance} = C_{avail} - B_{reserved}$ with zero off-by-one errors.
 
 ---
 
@@ -294,6 +315,7 @@ $$Score_{raw} = (S_{budget} \times 0.30) + (S_{commit} \times 0.25) + (S_{goals}
 1. **No Double Deduction on Commitments:** Reserved bills are *earmarked*, not subtracted from Available Cash. When marked as paid, the reservation converts into an actual expense. Cash decreases by the bill amount, reserved obligations decrease by the same amount, and **Uncommitted Cash remains unchanged**.
 2. **Goal Transfers Are Not Consumption Debt:** Contributing to a savings goal transfers cash into a locked asset. Available Cash remains constant, Uncommitted Cash decreases, and spending analytics do not treat the transfer as an expense.
 3. **Strict Simulation Isolation:** The simulator clones the state using `JSON.parse(JSON.stringify(state))`. No mutations occur until the user explicitly commits.
+4. **Timeline Non-Overlapping & One-Time Expense Isolation:** Strictly separates past completed history ($D_{completed}$), current day ($D_{current}$), and future days ($D_{future}$). One-time purchases are deducted once from Available Cash and are never multiplied across future days as artificial recurring expenses.
 
 ---
 
@@ -331,7 +353,7 @@ Proposed Decision ──► [Deep Clone State] ──► [Recalculate Metrics] �
 | 📈 **Recharts** | `^3.10.1` | Financial area forecasts & donut charts | Responsive SVG rendering for financial curves |
 | 🏷️ **Lucide React** | `^1.55.0` | Visual icon system | Consistent, lightweight iconography |
 | 🎉 **Canvas Confetti**| `^1.9.4` | Milestone and confirmation celebration | Dopamine feedback for positive financial moves |
-| 🧪 **Vitest** | `^5.0.3` | Unit testing framework | Sub-second testing of financial engine formulas |
+| 🧪 **Vitest** | `^5.0.3` | Unit & security test suite (31 tests) | Sub-second testing of financial engine & sanitization |
 
 ---
 
@@ -368,17 +390,19 @@ mintflow/
 │   │   └── UpcomingCommitmentsWidget.tsx # Chronological bill timeline
 │   ├── context/
 │   │   └── FinancialContext.tsx          # Central state, reducers & persistence
-│   ├── engine/                    # Pure deterministic financial math
+│   ├── engine/                    # Pure deterministic financial math & validation
 │   │   ├── currency.ts                   # INR formatting (Indian numbering system)
-│   │   ├── financialEngine.test.ts       # Vitest suite (7 unit tests)
-│   │   ├── financialEngine.ts            # Balance, allowance & category math
-│   │   ├── forecastEngine.ts             # 30-day multi-scenario projections
+│   │   ├── financialEngine.test.ts       # Vitest suite (14 accounting & forecast tests)
+│   │   ├── financialEngine.ts            # Balance, allowance & credibility burn math
+│   │   ├── forecastEngine.ts             # 30-day multi-scenario projections & curves
 │   │   ├── insightsEngine.ts             # Rule-based contextual insight alerts
 │   │   ├── riskEngine.ts                 # 5-factor weighted health & risk tiers
-│   │   ├── scenarioEngine.ts             # What-if simulation & alternatives
+│   │   ├── scenarioEngine.ts             # What-if simulation & smart alternatives
 │   │   ├── seedData.ts                   # Day 8 Demo & Day 1 Fresh state seeds
-│   │   ├── storage.ts                    # Versioned localStorage management
-│   │   └── types.ts                      # Core TypeScript domain models
+│   │   ├── storage.ts                    # Versioned localStorage with schema recovery
+│   │   ├── types.ts                      # Core TypeScript domain models
+│   │   ├── validation.test.ts            # Vitest suite (17 security & schema tests)
+│   │   └── validation.ts                 # Input sanitization, financial bounds & XSS guard
 │   ├── pages/                     # Primary top-level route views
 │   │   ├── BudgetActivityPage.tsx        # Budget anatomy bar & full ledger
 │   │   ├── CommitmentsPage.tsx           # Subscriptions & leakage calculator
@@ -427,11 +451,14 @@ The application will be available at **`http://localhost:5173/`**.
 # Start local dev server with HMR
 npm run dev
 
-# Run Vitest financial engine unit test suite
+# Run complete Vitest suite (31 financial engine, forecast & security tests)
 npx vitest run
 
 # Run production TypeScript compile and Vite build
 npm run build
+
+# Run linter verification
+npm run lint
 
 # Preview production build locally
 npm run preview
@@ -539,6 +566,50 @@ The student is tempted by an **impulse purchase of wireless earbuds for ₹1,500
 - **Zero Network Transmission:** No personal data, transaction entries, or simulation results are transmitted to external servers.
 - **Privacy by Design:** MINTFLOW never requests, processes, or stores real bank credentials, account numbers, or PAN/Aadhaar data.
 - **Device Limitations:** Data stored in `localStorage` does not sync between different browsers or devices. Clearing browser storage will reset the profile.
+
+---
+
+## 🛡️ Security, Input Validation & Storage Resilience
+
+MINTFLOW implements a defensive, multi-tier security and validation architecture across all mutation pathways to guarantee arithmetic precision, sanitize user inputs, and protect client-side persistent storage from corruption.
+
+### 🔒 1. Financial Input Sanitization & Bounds Enforcement (`validation.ts`)
+- 🛡️ **Strict Numeric Range Checking:** Transaction amounts, savings transfers, and recurring commitments are strictly bounded:
+  - Minimum valid amount: **₹0.01** (strictly rejects negative amounts, zero amounts, and inverse charges).
+  - Maximum single transaction bound: **₹100,000** (prevents integer overflow and unrealistic student inputs).
+- 🔢 **Precision Truncation:** Currency inputs are truncated to a maximum of 2 decimal places to eliminate floating-point representation drift.
+- 🚫 **Non-Finite Value Rejection:** Explicitly rejects `NaN`, `Infinity`, and `-Infinity` before reaching the arithmetic engine.
+
+### 🧼 2. XSS & Payload Sanitization
+- 🔒 **HTML Entity Escaping:** User-provided descriptions, goal names, and commitment notes undergo sanitization to neutralize malicious injection payloads (`<`, `>`, `&`, `"`, `'`, `/`).
+- 📏 **Length Constraints:** Text inputs are bounded (max 80 characters for transaction descriptions, max 60 characters for goals and commitments) to protect layout integrity and prevent memory abuse.
+
+### 💾 3. Persistent Storage Schema Validation & Corruption Recovery (`storage.ts`)
+- 🔍 **Strict Runtime Schema Validation:** When loading from `localStorage`, MINTFLOW validates parsed data against the domain schema:
+  - Verifies presence and valid types of `cycle` (numeric `currentDay` between 1 and 30, numeric `totalDays`).
+  - Verifies numeric `startingBudget` and ensures `transactions`, `commitments`, and `goals` are well-formed arrays.
+- 🔄 **Graceful Corruption Recovery:** If corrupted JSON, non-object payloads, or schema mismatches are detected:
+  - The engine catches the error and logs a diagnostic warning.
+  - Safely falls back to the active mode baseline (Day 8 Seeded Demo or Day 1 Clean Slate) without white-screening or crashing the application.
+
+---
+
+## ♿ Accessibility & Usability (WCAG AA Compliance)
+
+MINTFLOW is engineered to adhere to modern web accessibility principles, ensuring an inclusive experience across diverse assistive technologies and input methods.
+
+### 🪟 1. ARIA Dialog & Modal Architecture
+- 🏷️ **Semantic Roles:** All modals (`AddTransactionModal`, `GuidedDemoModal`, `ExperienceSelectorModal`, `OnboardingModal`) implement explicit `role="dialog"` and `aria-modal="true"`.
+- 🗣️ **Accessible Labelling:** Modals are linked to their respective headings via `aria-labelledby` and descriptions via `aria-describedby`.
+- ⌨️ **Keyboard Navigation & Escape Handling:** Every dialog includes a global `keydown` listener for the `Escape` key to allow immediate, effortless dismissal without breaking user focus.
+
+### 📋 2. Form Control Semantics
+- 🏷️ **Explicit Label Associations:** All inputs, sliders, and dropdowns feature explicit `<label>` elements connected via `htmlFor` and matching `id` attributes.
+- 📢 **Screen Reader Announcements:** Form validation alerts, input hints, and state transitions include `aria-invalid` and `aria-live="polite"` regions where appropriate.
+
+### 🎨 3. Visual Contrast & Color Independence
+- 👁️ **WCAG AA Contrast Ratios:** Text colors meet WCAG AA contrast standards against the `#080B12` midnight backdrop (minimum 4.5:1 for body copy and 3:1 for large headings).
+- 🏷️ **Multi-Modal Visual Indicators:** Financial status is never conveyed solely through color; risk levels, burn rates, and verdicts are accompanied by distinct iconography (Shield, Alert, Sparkles) and explicit text labels (`Stable`, `Watchful`, `Elevated`, `Critical`).
 
 ---
 

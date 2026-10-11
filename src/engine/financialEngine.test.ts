@@ -178,4 +178,113 @@ describe('MINTFLOW Financial Engine Accounting Integrity', () => {
     expect(result.after.uncommittedCash).toBeGreaterThan(0);
     expect(result.verdict.tone).toBe('positive');
   });
+
+  describe('Day 30 Forecast & Variable Burn Insufficient History Invariants', () => {
+    it('Day 1 Clean Slate has ₹10,000 month-end forecast with 0 expenses', () => {
+      const metrics = calculateMetrics(FRESH_START_FINANCIAL_STATE);
+      expect(metrics.projectedMonthEndBalance).toBe(10000);
+      expect(metrics.effectiveFutureDailyBurn).toBe(0);
+    });
+
+    it('adding a one-time ₹100 expense on Day 1 drops forecast by exactly ₹100 (from ₹10,000 to ₹9,900)', () => {
+      const state: FinancialState = JSON.parse(JSON.stringify(FRESH_START_FINANCIAL_STATE));
+      state.transactions.push({
+        id: 'tx-day1-coffee',
+        description: 'Cold Coffee & Cookie',
+        amount: 100,
+        category: 'food',
+        type: 'expense',
+        date: 'Day 1',
+        day: 1,
+        isEssential: false
+      });
+
+      const metrics = calculateMetrics(state);
+      expect(metrics.availableCash).toBe(9900);
+      expect(metrics.actualExpenses).toBe(100);
+      // Invariant: The ₹100 is deducted ONCE. It does NOT multiply across 30 days into a ₹3,100 drop!
+      expect(metrics.projectedMonthEndBalance).toBe(9900);
+      expect(metrics.effectiveFutureDailyBurn).toBe(0);
+    });
+
+    it('adding a second one-time ₹250 expense on Day 1 drops forecast by further ₹250 (to ₹9,650)', () => {
+      const state: FinancialState = JSON.parse(JSON.stringify(FRESH_START_FINANCIAL_STATE));
+      state.transactions.push(
+        {
+          id: 'tx-day1-1',
+          description: 'Cold Coffee',
+          amount: 100,
+          category: 'food',
+          type: 'expense',
+          date: 'Day 1',
+          day: 1,
+          isEssential: false
+        },
+        {
+          id: 'tx-day1-2',
+          description: 'Course Workbook',
+          amount: 250,
+          category: 'education',
+          type: 'expense',
+          date: 'Day 1',
+          day: 1,
+          isEssential: true
+        }
+      );
+
+      const metrics = calculateMetrics(state);
+      expect(metrics.availableCash).toBe(9650);
+      expect(metrics.actualExpenses).toBe(350);
+      expect(metrics.projectedMonthEndBalance).toBe(9650);
+    });
+
+    it('Day 8 Seeded Demo preserves established healthy surplus of ₹2,700', () => {
+      const metrics = calculateMetrics(INITIAL_FINANCIAL_STATE);
+      // Available cash 8561 - commitments 1338 - future variable burn (205.57 * 22 = 4523) = 2700
+      expect(metrics.projectedMonthEndBalance).toBe(2700);
+      expect(Math.round(metrics.effectiveFutureDailyBurn)).toBe(206);
+    });
+
+    it('Spend Simulator on Day 1 shows deltaProjectedBalance of exactly -₹100 for a ₹100 purchase', () => {
+      const result = simulateDecision(FRESH_START_FINANCIAL_STATE, {
+        type: 'buy_now',
+        amount: 100,
+        title: 'Cafeteria Snack',
+        category: 'food',
+        isEssential: false
+      });
+
+      expect(result.before.projectedMonthEndBalance).toBe(10000);
+      expect(result.after.projectedMonthEndBalance).toBe(9900);
+      expect(result.deltaProjectedBalance).toBe(-100);
+    });
+
+    it('Spend Simulator on Day 8 treats a one-time purchase as an isolated deduction without distorting completed history', () => {
+      const result = simulateDecision(INITIAL_FINANCIAL_STATE, {
+        type: 'buy_now',
+        amount: 1500,
+        title: 'Converse Chuck 70s',
+        category: 'shopping',
+        isEssential: false
+      });
+
+      expect(result.before.projectedMonthEndBalance).toBe(2700);
+      // Cash decreases by 1500, upcoming commitments and completed burn rate stay untouched
+      expect(result.after.projectedMonthEndBalance).toBe(1200);
+      expect(result.deltaProjectedBalance).toBe(-1500);
+    });
+
+    it('Day 30 boundary condition: futureRemainingDays is 0 and no future burn is extrapolated', () => {
+      const state: FinancialState = JSON.parse(JSON.stringify(INITIAL_FINANCIAL_STATE));
+      state.cycle.currentDay = 30;
+      // Mark all past commitments as paid or cancelled for boundary test
+      state.commitments = [];
+
+      const metrics = calculateMetrics(state);
+      expect(metrics.remainingDays).toBe(1); // Day 30 itself
+      // futureRemainingDays is Math.max(0, 30 - 30) = 0
+      // Forecast = availableCash - unpaidCommitments - (burn * 0) = availableCash
+      expect(metrics.projectedMonthEndBalance).toBe(metrics.availableCash);
+    });
+  });
 });

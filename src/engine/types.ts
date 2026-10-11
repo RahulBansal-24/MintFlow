@@ -91,6 +91,7 @@ export interface CalculatedMetrics {
   projectedMonthEndBalance: number;
   todaysSpent: number;
   averageDailySpent: number;
+  effectiveFutureDailyBurn: number;
   burnRateStatus: 'under' | 'on_track' | 'over';
   healthScore: number;
   previousHealthScore?: number;
