@@ -12,7 +12,14 @@ import {
 import { calculateMetrics } from '../engine/financialEngine';
 import { generateForecastData, StrategyComparison } from '../engine/forecastEngine';
 import { generateMoneyInsights, MoneyInsight } from '../engine/insightsEngine';
-import { loadFinancialState, saveFinancialState, resetDemoFinancialState } from '../engine/storage';
+import { 
+  loadFinancialState, 
+  saveFinancialState, 
+  resetFinancialState, 
+  loadProfileMode, 
+  saveProfileMode, 
+  ProfileMode 
+} from '../engine/storage';
 import { simulateDecision } from '../engine/scenarioEngine';
 
 interface FinancialContextType {
@@ -23,6 +30,10 @@ interface FinancialContextType {
     chartPoints: ForecastDayPoint[];
     strategies: StrategyComparison[];
   };
+  profileMode: ProfileMode;
+  switchProfileMode: (mode: ProfileMode) => void;
+  resetToCurrentMode: () => void;
+
   // Actions
   addTransaction: (tx: Omit<Transaction, 'id'>) => void;
   editTransaction: (id: string, updates: Partial<Transaction>) => void;
@@ -54,6 +65,7 @@ interface FinancialContextType {
 const FinancialContext = createContext<FinancialContextType | null>(null);
 
 export const FinancialProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const [profileMode, setProfileMode] = useState<ProfileMode>(() => loadProfileMode());
   const [state, setState] = useState<FinancialState>(() => loadFinancialState());
   const [history, setHistory] = useState<FinancialState[]>([]);
 
@@ -70,6 +82,21 @@ export const FinancialProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   const metrics = useMemo(() => calculateMetrics(state), [state]);
   const insights = useMemo(() => generateMoneyInsights(state, metrics), [state, metrics]);
   const forecastData = useMemo(() => generateForecastData(state), [state]);
+
+  // Switch profile mode (Demo vs Fresh)
+  const switchProfileMode = useCallback((newMode: ProfileMode) => {
+    saveProfileMode(newMode);
+    setProfileMode(newMode);
+    const freshState = resetFinancialState(newMode);
+    setState(freshState);
+    setHistory([]);
+  }, []);
+
+  const resetToCurrentMode = useCallback(() => {
+    const freshState = resetFinancialState(profileMode);
+    setState(freshState);
+    setHistory([]);
+  }, [profileMode]);
 
   // Transaction Actions
   const addTransaction = useCallback((tx: Omit<Transaction, 'id'>) => {
@@ -250,9 +277,21 @@ export const FinancialProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         }
 
         case 'save_goal': {
-          const target = next.goals.find(g => g.id === decision.targetGoalId) || next.goals[0];
+          let target = next.goals.find(g => g.id === decision.targetGoalId);
+          if (!target) target = next.goals[0];
           if (target) {
             target.savedAmount += Math.max(0, decision.amount);
+          } else {
+            next.goals.push({
+              id: 'goal-sim-' + Date.now(),
+              name: decision.title || 'Emergency Cushion',
+              targetAmount: Math.max(decision.amount * 1.5, 2000),
+              savedAmount: Math.max(0, decision.amount),
+              targetDay: 30,
+              icon: 'shield',
+              status: 'active',
+              color: '#65F5B4'
+            });
           }
           break;
         }
@@ -316,12 +355,10 @@ export const FinancialProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     }));
   }, []);
 
-  // Reset Demo
+  // Reset Demo to Day 8 seed
   const resetDemo = useCallback(() => {
-    const fresh = resetDemoFinancialState();
-    setState(fresh);
-    setHistory([]);
-  }, []);
+    switchProfileMode('demo');
+  }, [switchProfileMode]);
 
   // Undo
   const undoLastAction = useCallback(() => {
@@ -338,6 +375,9 @@ export const FinancialProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         metrics,
         insights,
         forecastData,
+        profileMode,
+        switchProfileMode,
+        resetToCurrentMode,
         addTransaction,
         editTransaction,
         deleteTransaction,

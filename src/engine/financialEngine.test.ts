@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { calculateMetrics } from './financialEngine';
 import { simulateDecision } from './scenarioEngine';
-import { INITIAL_FINANCIAL_STATE } from './seedData';
+import { INITIAL_FINANCIAL_STATE, FRESH_START_FINANCIAL_STATE } from './seedData';
 import { FinancialState } from './types';
 
 describe('MINTFLOW Financial Engine Accounting Integrity', () => {
@@ -39,6 +39,23 @@ describe('MINTFLOW Financial Engine Accounting Integrity', () => {
     // Health score is in the healthy zone (>= 75)
     expect(metrics.healthScore).toBeGreaterThanOrEqual(75);
     expect(metrics.riskAssessment.level).toBe('Stable');
+  });
+
+  it('correctly calculates Day 1 Fresh Start clean slate scenario', () => {
+    const metrics = calculateMetrics(FRESH_START_FINANCIAL_STATE);
+
+    expect(metrics.startingFunds).toBe(10000);
+    expect(metrics.totalFunds).toBe(10000);
+    expect(metrics.actualExpenses).toBe(0);
+    expect(metrics.availableCash).toBe(10000);
+    expect(metrics.unpaidReservedCommitments).toBe(0);
+    expect(metrics.unspentGoalAllocations).toBe(0);
+    expect(metrics.uncommittedCash).toBe(10000);
+    expect(metrics.remainingDays).toBe(30);
+    // Daily allowance = 10000 / 30 = 333.33
+    expect(Math.round(metrics.dailyAllowance)).toBe(333);
+    expect(metrics.healthScore).toBe(68);
+    expect(metrics.riskAssessment.level).toBe('Watchful');
   });
 
   it('correctly adds income and increases available and uncommitted cash', () => {
@@ -110,5 +127,55 @@ describe('MINTFLOW Financial Engine Accounting Integrity', () => {
     const freshMetrics = calculateMetrics(originalState);
     expect(freshMetrics.availableCash).toBe(8561);
     expect(freshMetrics.uncommittedCash).toBe(5023);
+  });
+
+  it('simulates future purchase planning (₹2,500) and compares alternatives', () => {
+    const originalState: FinancialState = JSON.parse(JSON.stringify(INITIAL_FINANCIAL_STATE));
+    const result = simulateDecision(originalState, {
+      type: 'buy_now',
+      amount: 2500,
+      title: 'Mechanical Keyboard / Course Kit',
+      category: 'education',
+      isEssential: false
+    });
+
+    // Delta cash is -2500
+    expect(result.deltaAvailableCash).toBe(-2500);
+    expect(result.deltaUncommittedCash).toBe(-2500);
+    // After purchase: available cash = 8561 - 2500 = 6061
+    expect(result.after.availableCash).toBe(6061);
+    // Uncommitted cash drops from 5023 to 2523
+    expect(result.after.uncommittedCash).toBe(2523);
+    // Daily allowance drops from 218 to ~110
+    expect(Math.round(result.after.dailyAllowance)).toBe(110);
+
+    // Smart alternatives generated
+    const hasDelay = result.smartAlternatives.some(a => a.actionType === 'delay');
+    const hasReduce = result.smartAlternatives.some(a => a.actionType === 'reduce');
+    expect(hasDelay).toBe(true);
+    expect(hasReduce).toBe(true);
+  });
+
+  it('simulates savings allocation (₹2,000) and checks runway sustainability', () => {
+    const originalState: FinancialState = JSON.parse(JSON.stringify(INITIAL_FINANCIAL_STATE));
+    const result = simulateDecision(originalState, {
+      type: 'save_goal',
+      amount: 2000,
+      title: 'Emergency Cushion Lock',
+      category: 'other',
+      isEssential: true,
+      targetGoalId: 'goal-1'
+    });
+
+    // Money is transferred to savings, so available cash does NOT decrease
+    expect(result.deltaAvailableCash).toBe(0);
+    // But uncommitted spendable cash decreases by 2000
+    expect(result.deltaUncommittedCash).toBe(-2000);
+    expect(result.after.uncommittedCash).toBe(5023 - 2000); // 3023
+    // Remaining daily allowance is 3023 / 23 = ~131/day
+    expect(Math.round(result.after.dailyAllowance)).toBe(131);
+    // Sustainability check: remaining uncommitted cash is positive (> 0)
+    expect(result.after.uncommittedCash).toBeGreaterThan(0);
+    expect(result.verdict.tone).toBe('positive');
   });
 });

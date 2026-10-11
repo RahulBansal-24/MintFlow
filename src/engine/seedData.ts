@@ -10,7 +10,7 @@ export const INITIAL_TRANSACTIONS: Transaction[] = [
     date: 'Day 1',
     day: 1,
     isEssential: true,
-    notes: 'Campus cafeteria'
+    notes: 'Demo record: campus cafeteria'
   },
   {
     id: 'tx-2',
@@ -21,7 +21,7 @@ export const INITIAL_TRANSACTIONS: Transaction[] = [
     date: 'Day 2',
     day: 2,
     isEssential: true,
-    notes: 'Yellow Line commute'
+    notes: 'Demo record: Yellow line commute'
   },
   {
     id: 'tx-3',
@@ -32,7 +32,7 @@ export const INITIAL_TRANSACTIONS: Transaction[] = [
     date: 'Day 3',
     day: 3,
     isEssential: true,
-    notes: 'Library stall'
+    notes: 'Demo record: library print stall'
   },
   {
     id: 'tx-4',
@@ -43,7 +43,7 @@ export const INITIAL_TRANSACTIONS: Transaction[] = [
     date: 'Day 4',
     day: 4,
     isEssential: false,
-    notes: 'Weekend dinner split'
+    notes: 'Demo record: weekend dinner split'
   },
   {
     id: 'tx-5',
@@ -54,7 +54,7 @@ export const INITIAL_TRANSACTIONS: Transaction[] = [
     date: 'Day 5',
     day: 5,
     isEssential: true,
-    notes: 'Hostel pantry supplies'
+    notes: 'Demo record: hostel pantry supplies'
   },
   {
     id: 'tx-6',
@@ -65,7 +65,7 @@ export const INITIAL_TRANSACTIONS: Transaction[] = [
     date: 'Day 6',
     day: 6,
     isEssential: false,
-    notes: 'Student verification applied'
+    notes: 'Demo record: verified student discount'
   },
   {
     id: 'tx-7',
@@ -76,7 +76,7 @@ export const INITIAL_TRANSACTIONS: Transaction[] = [
     date: 'Day 7',
     day: 7,
     isEssential: false,
-    notes: 'Student matinee ticket'
+    notes: 'Demo record: student matinee pass'
   }
 ];
 
@@ -156,7 +156,7 @@ export const INITIAL_FINANCIAL_STATE: FinancialState = {
   cycle: {
     totalDays: 30,
     currentDay: 8,
-    cycleName: 'October Financial Cycle',
+    cycleName: 'October Financial Cycle (Demo)',
     startDate: '2026-10-01'
   },
   startingBudget: 10000,
@@ -165,4 +165,30 @@ export const INITIAL_FINANCIAL_STATE: FinancialState = {
   goals: INITIAL_GOALS,
   emergencyReserveTarget: 1500,
   previousHealthScore: 78
+};
+
+export const FRESH_START_FINANCIAL_STATE: FinancialState = {
+  cycle: {
+    totalDays: 30,
+    currentDay: 1,
+    cycleName: 'My 30-Day Budget Cycle',
+    startDate: '2026-10-01'
+  },
+  startingBudget: 10000,
+  transactions: [],
+  commitments: [],
+  goals: [
+    {
+      id: 'goal-fresh-1',
+      name: 'Emergency Buffer Target',
+      targetAmount: 2000,
+      savedAmount: 0,
+      targetDay: 30,
+      icon: 'shield',
+      status: 'active',
+      color: '#65F5B4'
+    }
+  ],
+  emergencyReserveTarget: 2000,
+  previousHealthScore: 100
 };

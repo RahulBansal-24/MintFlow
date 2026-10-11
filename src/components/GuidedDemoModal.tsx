@@ -8,8 +8,10 @@ import {
   Tv, 
   ArrowRight, 
   RotateCcw,
+  Layers,
+  PiggyBank,
   CheckCircle2,
-  Sliders
+  CalendarClock
 } from 'lucide-react';
 import { useFinancial } from '../context/FinancialContext';
 import { SimulationDecision } from '../engine/types';
@@ -35,7 +37,7 @@ export const GuidedDemoModal: React.FC<GuidedDemoModalProps> = ({
       id: 'scen-impulse',
       badge: 'Scenario 1: Impulse Buy',
       title: 'The ₹1,500 Sneaker / Earbuds Temptation',
-      description: 'You spot a flash sale on trendy earbuds for ₹1,500. See how this single buy slices your daily flexible spend from ₹' + Math.round(metrics.dailyAllowance) + '/d down to ₹' + Math.round((metrics.uncommittedCash - 1500) / metrics.remainingDays) + '/d.',
+      description: `Spotting a flash sale: see how spending ₹1,500 instantly drops your flexible allowance from ₹${Math.round(metrics.dailyAllowance)}/d to ₹${Math.max(0, Math.round((metrics.uncommittedCash - 1500) / (metrics.remainingDays || 1)))}/d and compare cheaper value editions.`,
       icon: <ShoppingBag className="w-5 h-5 text-amber" />,
       borderColor: 'border-amber/30 hover:border-amber',
       tagColor: 'bg-amber/15 text-amber',
@@ -51,7 +53,7 @@ export const GuidedDemoModal: React.FC<GuidedDemoModalProps> = ({
       id: 'scen-emergency',
       badge: 'Scenario 2: The Emergency',
       title: 'Unexpected ₹2,000 Laptop Screen Repair',
-      description: 'Your laptop screen gets cracked right before midterm submissions. Explore how this unexpected hit affects upcoming bills and how the recovery planner guides you back to safety.',
+      description: 'Your laptop display cracks right before semester submissions. Stress-test whether available cash covers both the emergency and upcoming hostel bills, and inspect recovery options.',
       icon: <AlertTriangle className="w-5 h-5 text-coral" />,
       borderColor: 'border-coral/30 hover:border-coral',
       tagColor: 'bg-coral/15 text-coral',
@@ -67,7 +69,7 @@ export const GuidedDemoModal: React.FC<GuidedDemoModalProps> = ({
       id: 'scen-subscription',
       badge: 'Scenario 3: Subscription Cut',
       title: 'Cancelling ₹189/mo YouTube Premium Share',
-      description: 'Questioning recurring leakage: see how cancelling a non-essential subscription frees up ₹189 immediately, protecting upcoming hostel bills and boosting goal runway.',
+      description: 'Questioning recurring leakage: see how cancelling future payments on a non-essential subscription frees up ₹189, boosting your daily spending allowance.',
       icon: <Tv className="w-5 h-5 text-cyan" />,
       borderColor: 'border-cyan/30 hover:border-cyan',
       tagColor: 'bg-cyan/15 text-cyan',
@@ -76,6 +78,39 @@ export const GuidedDemoModal: React.FC<GuidedDemoModalProps> = ({
         amount: 189,
         title: 'Cancel YouTube Premium Family Share',
         targetCommitmentId: 'comm-2'
+      }
+    },
+    {
+      id: 'scen-future-planning',
+      badge: 'Scenario 4: Future Purchase Planning',
+      title: 'Planning a ₹2,500 Tech Gear Purchase',
+      description: 'Simulate a ₹2,500 purchase when an ₹800 hostel bill is due on Day 12. Compare buying immediately vs delaying until post-bill date vs choosing a budget alternative.',
+      icon: <CalendarClock className="w-5 h-5 text-lavender" />,
+      borderColor: 'border-lavender/30 hover:border-lavender',
+      tagColor: 'bg-lavender/15 text-lavender',
+      actionDecision: {
+        type: 'buy_now' as const,
+        amount: 2500,
+        title: 'Mechanical Keyboard / Course Kit',
+        category: 'education' as const,
+        isEssential: false
+      }
+    },
+    {
+      id: 'scen-savings-allocation',
+      badge: 'Scenario 5: Savings Allocation',
+      title: 'Transferring ₹2,000 to Emergency Cushion',
+      description: `Simulate locking ₹2,000 into your emergency reserve. Check if the remaining uncommitted cash (${formatINR(Math.max(0, metrics.uncommittedCash - 2000))}) provides sufficient flexible runway for the rest of the cycle.`,
+      icon: <PiggyBank className="w-5 h-5 text-mint" />,
+      borderColor: 'border-mint/30 hover:border-mint',
+      tagColor: 'bg-mint/15 text-mint',
+      actionDecision: {
+        type: 'save_goal' as const,
+        amount: 2000,
+        title: 'Emergency Cushion Lock',
+        category: 'other' as const,
+        isEssential: true,
+        targetGoalId: state.goals[0]?.id || 'goal-1'
       }
     }
   ];
@@ -86,12 +121,12 @@ export const GuidedDemoModal: React.FC<GuidedDemoModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-md overflow-y-auto">
       <motion.div
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
         exit={{ opacity: 0, scale: 0.95 }}
-        className="relative w-full max-w-2xl rounded-2xl bg-gradient-to-b from-[#0D1220] to-[#080B12] border border-white/10 p-6 shadow-2xl space-y-5"
+        className="relative w-full max-w-2xl my-6 rounded-2xl bg-gradient-to-b from-[#0D1220] to-[#080B12] border border-white/10 p-6 shadow-2xl space-y-4"
       >
         {/* Header */}
         <div className="flex items-center justify-between pb-3 border-b border-white/[0.08]">
@@ -100,9 +135,9 @@ export const GuidedDemoModal: React.FC<GuidedDemoModalProps> = ({
               <Sparkles className="w-5 h-5" />
             </div>
             <div>
-              <h3 className="text-lg font-heading font-bold text-white">Hackathon Demo Lab</h3>
+              <h3 className="text-lg font-heading font-bold text-white">Hackathon Demo Scenarios</h3>
               <p className="text-xs text-slate-400">
-                Select an interactive scenario to preview interconnected financial consequences.
+                5 interactive decision labs showing interconnected financial consequences in real-time.
               </p>
             </div>
           </div>
@@ -115,8 +150,8 @@ export const GuidedDemoModal: React.FC<GuidedDemoModalProps> = ({
           </button>
         </div>
 
-        {/* 3 Guided Scenarios */}
-        <div className="space-y-3">
+        {/* 5 Guided Scenarios */}
+        <div className="space-y-3 max-h-[60vh] overflow-y-auto pr-1">
           {scenarios.map((scen) => (
             <div
               key={scen.id}
@@ -155,7 +190,7 @@ export const GuidedDemoModal: React.FC<GuidedDemoModalProps> = ({
         {/* Reset Demo Footer for Judging */}
         <div className="pt-3 border-t border-white/[0.08] flex items-center justify-between text-xs">
           <span className="text-slate-400">
-            Need a fresh start for judges?
+            Restore known benchmark for judges?
           </span>
 
           <button
@@ -164,7 +199,7 @@ export const GuidedDemoModal: React.FC<GuidedDemoModalProps> = ({
             className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-coral/10 hover:bg-coral/20 text-coral border border-coral/30 font-medium transition-colors"
           >
             <RotateCcw className="w-3.5 h-3.5" />
-            <span>Reset Demo to Day 8 Seed</span>
+            <span>Reset to Benchmark State</span>
           </button>
         </div>
       </motion.div>

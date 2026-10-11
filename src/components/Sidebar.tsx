@@ -8,7 +8,7 @@ import {
   Activity, 
   Sparkles, 
   RotateCcw,
-  Zap,
+  Compass,
   ChevronRight
 } from 'lucide-react';
 import { useFinancial } from '../context/FinancialContext';
@@ -26,15 +26,17 @@ interface SidebarProps {
   onNavigate: (page: NavigationPage) => void;
   onOpenDemoModal: () => void;
   onOpenSimulatorModal: () => void;
+  onOpenExperienceSelector: () => void;
 }
 
 export const Sidebar: React.FC<SidebarProps> = ({
   currentPage,
   onNavigate,
   onOpenDemoModal,
-  onOpenSimulatorModal
+  onOpenSimulatorModal,
+  onOpenExperienceSelector
 }) => {
-  const { state, resetDemo, setCurrentDay, metrics } = useFinancial();
+  const { state, profileMode, resetToCurrentMode, setCurrentDay, metrics } = useFinancial();
 
   const navItems = [
     { id: 'overview' as NavigationPage, label: 'Overview', icon: <LayoutDashboard className="w-4 h-4" /> },
@@ -47,7 +49,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
   return (
     <aside className="hidden lg:flex flex-col justify-between w-64 h-screen sticky top-0 bg-[#080B12] border-r border-white/[0.07] p-5 select-none z-30">
-      <div className="space-y-6">
+      <div className="space-y-5">
         {/* Brand Logo & Tagline */}
         <div className="flex items-center gap-3">
           <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-mint to-cyan flex items-center justify-center shadow-glow-mint">
@@ -60,6 +62,30 @@ export const Sidebar: React.FC<SidebarProps> = ({
             </div>
             <p className="text-[10px] text-slate-400 font-sans tracking-tight">Your Money. Your Moves.</p>
           </div>
+        </div>
+
+        {/* Profile Mode Indicator Badge */}
+        <div className="p-2.5 rounded-xl bg-background-card border border-white/[0.06] flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <span className={`w-2 h-2 rounded-full ${profileMode === 'demo' ? 'bg-amber animate-pulse' : 'bg-mint'}`} />
+            <div>
+              <span className="text-[10px] font-mono uppercase text-slate-400 block leading-tight">
+                Current Profile
+              </span>
+              <span className={`text-xs font-semibold ${profileMode === 'demo' ? 'text-amber' : 'text-mint'}`}>
+                {profileMode === 'demo' ? 'Demo Profile (Seeded)' : 'Clean Slate (Day 1)'}
+              </span>
+            </div>
+          </div>
+
+          <button
+            type="button"
+            onClick={onOpenExperienceSelector}
+            className="p-1 rounded-lg bg-white/[0.05] hover:bg-white/[0.1] text-slate-300 hover:text-white transition-colors text-[10px] font-mono"
+            title="Switch Profile Mode"
+          >
+            Switch
+          </button>
         </div>
 
         {/* 30-Day Cycle Stepper Pill */}
@@ -140,18 +166,18 @@ export const Sidebar: React.FC<SidebarProps> = ({
         >
           <div className="flex items-center gap-2">
             <Sparkles className="w-3.5 h-3.5 text-cyan animate-pulse" />
-            <span>Hackathon Demo Scenarios</span>
+            <span>Hackathon Demo (5 Scenarios)</span>
           </div>
           <ChevronRight className="w-3.5 h-3.5 text-slate-400 group-hover:text-white transition-colors" />
         </button>
 
         <button
           type="button"
-          onClick={resetDemo}
+          onClick={resetToCurrentMode}
           className="w-full flex items-center justify-center gap-1.5 py-2 rounded-xl text-[11px] font-mono text-slate-400 hover:text-coral hover:bg-coral/10 border border-transparent hover:border-coral/20 transition-all"
         >
           <RotateCcw className="w-3 h-3" />
-          <span>Reset Demo (Day 8 Seed)</span>
+          <span>Reset {profileMode === 'demo' ? 'Day 8 Demo' : 'Clean Slate'}</span>
         </button>
       </div>
     </aside>

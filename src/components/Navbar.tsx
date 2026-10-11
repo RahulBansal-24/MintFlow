@@ -9,7 +9,8 @@ import {
   Calendar, 
   CheckCircle2, 
   AlertTriangle,
-  Undo2
+  Undo2,
+  Compass
 } from 'lucide-react';
 import { useFinancial } from '../context/FinancialContext';
 import { NavigationPage } from './Sidebar';
@@ -20,15 +21,17 @@ interface NavbarProps {
   onNavigate: (page: NavigationPage) => void;
   onOpenDemoModal: () => void;
   onOpenSimulatorModal: () => void;
+  onOpenExperienceSelector: () => void;
 }
 
 export const Navbar: React.FC<NavbarProps> = ({
   currentPage,
   onNavigate,
   onOpenDemoModal,
-  onOpenSimulatorModal
+  onOpenSimulatorModal,
+  onOpenExperienceSelector
 }) => {
-  const { state, metrics, canUndo, undoLastAction } = useFinancial();
+  const { state, metrics, canUndo, undoLastAction, profileMode } = useFinancial();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [notificationsOpen, setNotificationsOpen] = useState(false);
 
@@ -57,9 +60,24 @@ export const Navbar: React.FC<NavbarProps> = ({
           </button>
 
           <div className="hidden sm:block">
-            <h1 className="text-sm font-heading font-bold text-white tracking-wide">
-              {pageTitles[currentPage]}
-            </h1>
+            <div className="flex items-center gap-2">
+              <h1 className="text-sm font-heading font-bold text-white tracking-wide">
+                {pageTitles[currentPage]}
+              </h1>
+              {/* Profile Mode Pill */}
+              <button
+                type="button"
+                onClick={onOpenExperienceSelector}
+                className={`px-2 py-0.5 rounded-full border text-[10px] font-mono transition-colors ${
+                  profileMode === 'demo'
+                    ? 'bg-amber/10 border-amber/30 text-amber hover:bg-amber/20'
+                    : 'bg-mint/10 border-mint/30 text-mint hover:bg-mint/20'
+                }`}
+                title="Click to switch starting profile"
+              >
+                {profileMode === 'demo' ? 'Demo Mode (Day 8 Seed)' : 'Clean Slate (Day 1)'}
+              </button>
+            </div>
             <p className="text-[11px] text-slate-400 font-sans">
               Day {state.cycle.currentDay} of 30 • {metrics.remainingDays} days remaining in cycle
             </p>
@@ -138,15 +156,21 @@ export const Navbar: React.FC<NavbarProps> = ({
                   <span>Commitment Alerts</span>
                   <span className="text-[10px] font-mono text-cyan">{upcomingBills.length} Upcoming</span>
                 </div>
-                {upcomingBills.map(b => (
-                  <div key={b.id} className="p-2 rounded-lg bg-background-card border border-white/[0.04]">
-                    <div className="font-medium text-white">{b.name}</div>
-                    <div className="text-[11px] text-slate-400 flex items-center justify-between mt-1">
-                      <span>Due Day {b.dueDay}</span>
-                      <span className="font-bold text-mint">{formatINR(b.amount)}</span>
-                    </div>
+                {upcomingBills.length === 0 ? (
+                  <div className="py-3 text-center text-slate-400 text-xs">
+                    No upcoming commitments pending!
                   </div>
-                ))}
+                ) : (
+                  upcomingBills.map(b => (
+                    <div key={b.id} className="p-2 rounded-lg bg-background-card border border-white/[0.04]">
+                      <div className="font-medium text-white">{b.name}</div>
+                      <div className="text-[11px] text-slate-400 flex items-center justify-between mt-1">
+                        <span>Due Day {b.dueDay}</span>
+                        <span className="font-bold text-mint">{formatINR(b.amount)}</span>
+                      </div>
+                    </div>
+                  ))
+                )}
               </div>
             )}
           </div>
@@ -165,6 +189,18 @@ export const Navbar: React.FC<NavbarProps> = ({
       {/* Mobile Drawer Menu */}
       {mobileMenuOpen && (
         <div className="lg:hidden mt-3 pt-3 border-t border-white/[0.08] space-y-2 pb-2">
+          <div className="px-3 py-1 flex items-center justify-between bg-white/[0.03] rounded-lg mb-2">
+            <span className="text-[11px] font-mono text-slate-400">Profile:</span>
+            <button
+              onClick={() => {
+                onOpenExperienceSelector();
+                setMobileMenuOpen(false);
+              }}
+              className="text-xs text-mint font-semibold underline"
+            >
+              {profileMode === 'demo' ? 'Demo Mode (Switch)' : 'Clean Slate (Switch)'}
+            </button>
+          </div>
           {(['overview', 'simulator', 'budget', 'goals', 'commitments', 'health'] as NavigationPage[]).map((page) => (
             <button
               key={page}
@@ -183,7 +219,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                page === 'commitments' ? 'Commitments & Subscriptions' : 'Financial Health'}
             </button>
           ))}
-          <div className="pt-2 border-t border-white/[0.08]">
+          <div className="pt-2 border-t border-white/[0.08] space-y-1">
             <button
               onClick={() => {
                 onOpenDemoModal();
@@ -192,6 +228,15 @@ export const Navbar: React.FC<NavbarProps> = ({
               className="w-full text-left px-3 py-2 rounded-lg text-xs text-cyan font-semibold"
             >
               ✨ Open Hackathon Demo Scenarios
+            </button>
+            <button
+              onClick={() => {
+                onOpenExperienceSelector();
+                setMobileMenuOpen(false);
+              }}
+              className="w-full text-left px-3 py-2 rounded-lg text-xs text-amber font-semibold"
+            >
+              🔄 Change Starting Experience Mode
             </button>
           </div>
         </div>

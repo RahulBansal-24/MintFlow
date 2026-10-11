@@ -1,6 +1,5 @@
 import React from 'react';
-import { motion } from 'framer-motion';
-import { Sparkles, ArrowRight, ShieldCheck, Zap, Info } from 'lucide-react';
+import { Sparkles, ArrowRight, ShieldCheck, Zap, Info, Compass } from 'lucide-react';
 import { useFinancial } from '../context/FinancialContext';
 import { MoneyOrbit } from '../components/MoneyOrbit';
 import { BalanceHeroCard } from '../components/BalanceHeroCard';
@@ -12,7 +11,6 @@ import { SavingsGoalsWidget } from '../components/SavingsGoalsWidget';
 import { RecentActivityWidget } from '../components/RecentActivityWidget';
 import { MoneyInsightsWidget } from '../components/MoneyInsightsWidget';
 import { NavigationPage } from '../components/Sidebar';
-import { TransactionCategory } from '../engine/types';
 
 interface OverviewPageProps {
   onNavigate: (page: NavigationPage) => void;
@@ -25,11 +23,11 @@ export const OverviewPage: React.FC<OverviewPageProps> = ({
   onOpenSimulator,
   onOpenAddTransaction
 }) => {
-  const { state, metrics } = useFinancial();
+  const { state, metrics, profileMode } = useFinancial();
 
   // Dynamic contextual hero insight based on real math
   const getContextualInsight = () => {
-    if (metrics.todaysSpent > metrics.dailyAllowance) {
+    if (metrics.todaysSpent > metrics.dailyAllowance && metrics.todaysSpent > 0) {
       return "You're spending slightly faster than your daily plan today. Easing off tomorrow protects your month-end surplus.";
     }
     if (metrics.unpaidReservedCommitments > 0) {
@@ -40,16 +38,36 @@ export const OverviewPage: React.FC<OverviewPageProps> = ({
 
   return (
     <div className="space-y-6 pb-12">
+      {/* Demo Profile Advisory Banner */}
+      {profileMode === 'demo' && (
+        <div className="p-3 rounded-xl bg-amber/10 border border-amber/25 text-amber text-xs flex items-center justify-between gap-3 shadow-sm">
+          <div className="flex items-center gap-2">
+            <Info className="w-4 h-4 text-amber shrink-0" />
+            <span>
+              <strong>Demo Profile Active:</strong> Seeded with sample college transactions for hackathon demonstration. All metrics are calculated deterministically.
+            </span>
+          </div>
+          <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-amber/15 uppercase font-semibold whitespace-nowrap">
+            Sample Data
+          </span>
+        </div>
+      )}
+
       {/* 1. Welcome Area & 30-Day Cycle Context */}
       <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-mint/10 via-cyan/5 to-transparent border border-mint/20 p-5 shadow-glass">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div className="space-y-1">
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 flex-wrap">
               <span className="text-[11px] font-mono uppercase px-2 py-0.5 rounded bg-mint/20 text-mint font-semibold">
                 Financial Cycle Active
               </span>
               <span className="text-xs text-slate-400 font-mono">
                 Day {state.cycle.currentDay} of 30
+              </span>
+              <span className={`text-[10px] font-mono px-2 py-0.5 rounded-full border ${
+                profileMode === 'demo' ? 'bg-amber/10 border-amber/30 text-amber' : 'bg-mint/10 border-mint/30 text-mint'
+              }`}>
+                {profileMode === 'demo' ? 'Seeded Demo Profile' : 'Clean Slate (Day 1)'}
               </span>
             </div>
             <h2 className="text-2xl font-heading font-extrabold text-white tracking-tight">
@@ -101,7 +119,7 @@ export const OverviewPage: React.FC<OverviewPageProps> = ({
           <UpcomingCommitmentsWidget onNavigateToCommitments={() => onNavigate('commitments')} />
         </div>
         <div className="lg:col-span-7">
-          <SpendingDonutChart onSelectCategory={(cat) => onNavigate('budget')} />
+          <SpendingDonutChart onSelectCategory={() => onNavigate('budget')} />
         </div>
       </div>
 

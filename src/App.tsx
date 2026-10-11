@@ -10,16 +10,19 @@ import { CommitmentsPage } from './pages/CommitmentsPage';
 import { FinancialHealthPage } from './pages/FinancialHealthPage';
 import { GuidedDemoModal } from './components/GuidedDemoModal';
 import { OnboardingModal } from './components/OnboardingModal';
+import { ExperienceSelectorModal } from './components/ExperienceSelectorModal';
 import { AddTransactionModal } from './components/AddTransactionModal';
 import { SpendSimulatorView } from './components/SpendSimulatorView';
 import { SimulationDecision } from './engine/types';
+import { hasChosenExperience } from './engine/storage';
 
 const MainAppContent: React.FC = () => {
   const [currentPage, setCurrentPage] = useState<NavigationPage>('overview');
   const [isDemoModalOpen, setIsDemoModalOpen] = useState(false);
-  const [isOnboardingOpen, setIsOnboardingOpen] = useState(() => {
-    return !localStorage.getItem('MINTFLOW_ONBOARDING_SEEN');
+  const [isExperienceModalOpen, setIsExperienceModalOpen] = useState(() => {
+    return !hasChosenExperience();
   });
+  const [isOnboardingOpen, setIsOnboardingOpen] = useState(false);
   const [isAddTransactionOpen, setIsAddTransactionOpen] = useState(false);
   const [simulatorModalDecision, setSimulatorModalDecision] = useState<Partial<SimulationDecision> | null>(null);
 
@@ -40,6 +43,7 @@ const MainAppContent: React.FC = () => {
         onNavigate={setCurrentPage}
         onOpenDemoModal={() => setIsDemoModalOpen(true)}
         onOpenSimulatorModal={() => setSimulatorModalDecision({ amount: 1200, title: 'Impulse Purchase' })}
+        onOpenExperienceSelector={() => setIsExperienceModalOpen(true)}
       />
 
       {/* Main Content Area */}
@@ -49,6 +53,7 @@ const MainAppContent: React.FC = () => {
           onNavigate={setCurrentPage}
           onOpenDemoModal={() => setIsDemoModalOpen(true)}
           onOpenSimulatorModal={() => setSimulatorModalDecision({ amount: 1200, title: 'Impulse Purchase' })}
+          onOpenExperienceSelector={() => setIsExperienceModalOpen(true)}
         />
 
         <main className="flex-1 p-4 sm:p-6 lg:p-8 max-w-7xl w-full mx-auto">
@@ -73,26 +78,32 @@ const MainAppContent: React.FC = () => {
       </div>
 
       {/* Global Modals */}
-      {/* 1. Guided Demo Modal */}
+      {/* 1. Starting Experience Selector (First launch / Switcher) */}
+      <ExperienceSelectorModal
+        isOpen={isExperienceModalOpen}
+        onClose={() => setIsExperienceModalOpen(false)}
+      />
+
+      {/* 2. Guided Demo Modal (5 Hackathon Scenarios) */}
       <GuidedDemoModal
         isOpen={isDemoModalOpen}
         onClose={() => setIsDemoModalOpen(false)}
         onLaunchScenario={handleLaunchScenario}
       />
 
-      {/* 2. Onboarding Tour Modal */}
+      {/* 3. Onboarding Tour Modal */}
       <OnboardingModal
         isOpen={isOnboardingOpen}
         onClose={handleCloseOnboarding}
       />
 
-      {/* 3. Add Transaction Modal */}
+      {/* 4. Add Transaction Modal */}
       <AddTransactionModal
         isOpen={isAddTransactionOpen}
         onClose={() => setIsAddTransactionOpen(false)}
       />
 
-      {/* 4. Global Spend Simulator Overlay Modal */}
+      {/* 5. Global Spend Simulator Overlay Modal */}
       {simulatorModalDecision && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md overflow-y-auto">
           <div className="w-full max-w-5xl my-8">

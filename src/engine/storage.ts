@@ -1,22 +1,60 @@
 import { FinancialState } from './types';
-import { INITIAL_FINANCIAL_STATE } from './seedData';
+import { INITIAL_FINANCIAL_STATE, FRESH_START_FINANCIAL_STATE } from './seedData';
 
 const STORAGE_KEY = 'MINTFLOW_V1_FINANCIAL_STATE';
+const PROFILE_MODE_KEY = 'MINTFLOW_PROFILE_MODE';
+const EXPERIENCE_CHOSEN_KEY = 'MINTFLOW_EXPERIENCE_CHOSEN';
+
+export type ProfileMode = 'demo' | 'fresh';
+
+export function loadProfileMode(): ProfileMode {
+  try {
+    const mode = localStorage.getItem(PROFILE_MODE_KEY);
+    return mode === 'fresh' ? 'fresh' : 'demo';
+  } catch {
+    return 'demo';
+  }
+}
+
+export function saveProfileMode(mode: ProfileMode): void {
+  try {
+    localStorage.setItem(PROFILE_MODE_KEY, mode);
+  } catch (e) {
+    console.error('Failed to save profile mode:', e);
+  }
+}
+
+export function hasChosenExperience(): boolean {
+  try {
+    return localStorage.getItem(EXPERIENCE_CHOSEN_KEY) === 'true';
+  } catch {
+    return false;
+  }
+}
+
+export function setExperienceChosen(chosen: boolean = true): void {
+  try {
+    localStorage.setItem(EXPERIENCE_CHOSEN_KEY, chosen ? 'true' : 'false');
+  } catch (e) {
+    console.error('Failed to save experience chosen state:', e);
+  }
+}
 
 export function loadFinancialState(): FinancialState {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) {
-      return INITIAL_FINANCIAL_STATE;
+      const mode = loadProfileMode();
+      return mode === 'fresh' ? FRESH_START_FINANCIAL_STATE : INITIAL_FINANCIAL_STATE;
     }
     const parsed = JSON.parse(raw);
-    // Basic schema integrity check
     if (parsed && parsed.cycle && Array.isArray(parsed.transactions) && Array.isArray(parsed.commitments)) {
       return parsed;
     }
-    return INITIAL_FINANCIAL_STATE;
+    const mode = loadProfileMode();
+    return mode === 'fresh' ? FRESH_START_FINANCIAL_STATE : INITIAL_FINANCIAL_STATE;
   } catch (err) {
-    console.error('Failed to parse stored financial state, falling back to default seed data:', err);
+    console.error('Failed to parse stored financial state, falling back:', err);
     return INITIAL_FINANCIAL_STATE;
   }
 }
@@ -29,11 +67,13 @@ export function saveFinancialState(state: FinancialState): void {
   }
 }
 
-export function resetDemoFinancialState(): FinancialState {
+export function resetFinancialState(mode: ProfileMode = 'demo'): FinancialState {
   try {
     localStorage.removeItem(STORAGE_KEY);
+    saveProfileMode(mode);
   } catch (e) {
     console.error('Failed to clear storage:', e);
   }
-  return JSON.parse(JSON.stringify(INITIAL_FINANCIAL_STATE));
+  const base = mode === 'fresh' ? FRESH_START_FINANCIAL_STATE : INITIAL_FINANCIAL_STATE;
+  return JSON.parse(JSON.stringify(base));
 }

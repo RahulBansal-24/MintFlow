@@ -16,7 +16,7 @@ export function simulateDecision(currentState: FinancialState, decision: Simulat
   const simulatedState: FinancialState = JSON.parse(JSON.stringify(currentState));
   const currentDay = simulatedState.cycle.currentDay;
 
-  // Apply simulated decision
+  // Apply simulated decision non-destructively
   switch (decision.type) {
     case 'buy_now':
     case 'add_expense': {
@@ -68,9 +68,24 @@ export function simulateDecision(currentState: FinancialState, decision: Simulat
     }
 
     case 'save_goal': {
-      const targetGoal = simulatedState.goals.find(g => g.id === decision.targetGoalId) || simulatedState.goals[0];
+      let targetGoal = simulatedState.goals.find(g => g.id === decision.targetGoalId);
+      if (!targetGoal) {
+        targetGoal = simulatedState.goals[0];
+      }
       if (targetGoal) {
         targetGoal.savedAmount += Math.max(0, decision.amount);
+      } else {
+        // If no goal exists, add one
+        simulatedState.goals.push({
+          id: 'goal-sim-' + Date.now(),
+          name: decision.title || 'Emergency Cushion',
+          targetAmount: Math.max(decision.amount * 1.5, 2000),
+          savedAmount: Math.max(0, decision.amount),
+          targetDay: 30,
+          icon: 'shield',
+          status: 'active',
+          color: '#65F5B4'
+        });
       }
       break;
     }
@@ -104,7 +119,6 @@ export function simulateDecision(currentState: FinancialState, decision: Simulat
       const targetBill = simulatedState.commitments.find(c => c.id === decision.targetCommitmentId);
       if (targetBill && targetBill.status === 'upcoming') {
         targetBill.status = 'paid';
-        // Convert reservation into actual paid expense
         simulatedState.transactions.push({
           id: 'sim-bill-pay-' + Date.now(),
           description: `Paid Bill: ${targetBill.name}`,
@@ -165,11 +179,31 @@ export function simulateDecision(currentState: FinancialState, decision: Simulat
       tone: 'danger',
       explanation: `Your remaining cash (₹${formatINR(after.availableCash, { hideSymbol: true })}) will fall below your upcoming bills (₹${formatINR(after.unpaidReservedCommitments, { hideSymbol: true })}).`
     };
+  } else if (decision.type === 'save_goal') {
+    if (after.uncommittedCash < 0) {
+      verdict = {
+        title: 'Over-Allocation Alert: Zero Flexible Runway',
+        tone: 'danger',
+        explanation: `Locking ₹${formatINR(decision.amount, { hideSymbol: true })} into savings pushes your uncommitted cash into negative (${formatINR(after.uncommittedCash)}). You will have no money left for routine daily needs.`
+      };
+    } else if (after.dailyAllowance < 100) {
+      verdict = {
+        title: 'Tight Squeeze: Savings Goal Strains Daily Allowance',
+        tone: 'caution',
+        explanation: `Transferring ₹${formatINR(decision.amount, { hideSymbol: true })} to savings leaves ₹${formatINR(after.uncommittedCash, { hideSymbol: true })} uncommitted (₹${Math.round(after.dailyAllowance)}/day). Daily college expenses may feel tight.`
+      };
+    } else {
+      verdict = {
+        title: 'Savings Goal Funded: Safe Runway Intact',
+        tone: 'positive',
+        explanation: `Transferring ₹${formatINR(decision.amount, { hideSymbol: true })} to your emergency cushion is fully sustainable. You retain ₹${formatINR(after.uncommittedCash, { hideSymbol: true })} uncommitted (₹${Math.round(after.dailyAllowance)}/day) for remaining days.`
+      };
+    }
   } else if (after.dailyAllowance < 100) {
     verdict = {
       title: 'Pinch Alert: Tight Daily Spending Allowance',
       tone: 'caution',
-      explanation: `Your flexible daily allowance drops from ₹${Math.round(before.dailyAllowance)} to ₹${Math.round(after.dailyAllowance)}/day. Routine college expenses may feel tight.`
+      explanation: `Your flexible daily allowance drops from ₹${Math.round(before.dailyAllowance)} to ₹${Math.round(after.dailyAllowance)}/day. Routine expenses will feel constrained.`
     };
   } else if (decision.type === 'cancel_subscription') {
     verdict = {
@@ -183,15 +217,12 @@ export function simulateDecision(currentState: FinancialState, decision: Simulat
       tone: 'positive',
       explanation: `Receiving ₹${formatINR(decision.amount, { hideSymbol: true })} expands your daily allowance by +₹${Math.round(deltaDailyAllowance)}/day and strengthens reserves.`
     };
-  } else if (decision.type === 'save_goal') {
-    verdict = {
-      title: 'Goal Accelerating: Future Self Wins',
-      tone: 'positive',
-      explanation: `Allocating ₹${formatINR(decision.amount, { hideSymbol: true })} accelerates your target without adding any consumption debt.`
-    };
   }
 
   // Consequence timeline
+  const nextCommitment = currentState.commitments.find(c => c.status === 'upcoming' && c.dueDay >= currentDay);
+  const nextBillDate = nextCommitment ? `Day ${nextCommitment.dueDay} (${nextCommitment.name.split(' ')[0]})` : 'Day 12 & 24 (Bills)';
+
   const consequenceTimeline: SimulationResult['consequenceTimeline'] = [
     {
       timeframe: 'Today (Immediate)',
@@ -206,7 +237,7 @@ export function simulateDecision(currentState: FinancialState, decision: Simulat
       severity: after.dailyAllowance < 100 ? 'danger' : after.dailyAllowance < 150 ? 'caution' : 'neutral'
     },
     {
-      timeframe: 'Day 12 & 24 (Bills Coverage)',
+      timeframe: `${nextBillDate} Coverage`,
       impact: after.availableCash >= after.unpaidReservedCommitments
         ? `All upcoming bills (₹${formatINR(after.unpaidReservedCommitments)}) remain 100% funded`
         : `Deficit of ₹${formatINR(after.unpaidReservedCommitments - after.availableCash)} on scheduled bill dates`,
@@ -223,41 +254,54 @@ export function simulateDecision(currentState: FinancialState, decision: Simulat
   const smartAlternatives: SmartAlternative[] = [];
 
   if (decision.amount > 500 && (decision.type === 'buy_now' || decision.type === 'add_expense' || decision.type === 'emergency')) {
-    // 1. Reduced amount alternative
+    // 1. Value/Cheaper alternative (60% cost)
     const reducedAmount = Math.round(decision.amount * 0.6);
     const saved = decision.amount - reducedAmount;
     smartAlternatives.push({
       id: 'alt-reduce',
-      title: `Pick Value Edition (${Math.round(decision.amount * 0.6)} instead of ${decision.amount})`,
-      description: `Save ₹${saved} upfront. Keeps your daily allowance at ₹${Math.round(before.dailyAllowance - (reducedAmount / before.remainingDays))}/day instead of ₹${Math.round(after.dailyAllowance)}/day.`,
+      title: `Pick Value Edition (₹${reducedAmount} instead of ₹${decision.amount})`,
+      description: `Save ₹${saved} upfront. Preserves ₹${Math.round(before.dailyAllowance - (reducedAmount / before.remainingDays))}/day daily allowance instead of dropping to ₹${Math.round(after.dailyAllowance)}/day.`,
       adjustedAmount: reducedAmount,
       savedRupees: saved,
       actionType: 'reduce'
     });
 
-    // 2. Delay purchase alternative
-    smartAlternatives.push({
-      id: 'alt-delay',
-      title: 'Split or Delay until Day 14 (Post-Hostel Bill)',
-      description: 'Clear your ₹800 hostel maintenance bill first on Day 12 to eliminate risk of unpaid bill charges.',
-      adjustedAmount: decision.amount,
-      savedRupees: 0,
-      actionType: 'delay'
-    });
+    // 2. Delay purchase alternative post-bill
+    if (nextCommitment) {
+      smartAlternatives.push({
+        id: 'alt-delay',
+        title: `Delay Purchase to Day ${Math.min(30, nextCommitment.dueDay + 2)} (Post-${nextCommitment.name.split(' ')[0]} Bill)`,
+        description: `Clear your ₹${nextCommitment.amount} bill on Day ${nextCommitment.dueDay} first to eliminate risk of missed payments.`,
+        adjustedAmount: decision.amount,
+        savedRupees: 0,
+        actionType: 'delay'
+      });
+    }
 
     // 3. Cancel non-essential subscription trade-off
     const discSub = currentState.commitments.find(c => c.isSubscription && !c.isEssential && c.status === 'upcoming');
     if (discSub) {
       smartAlternatives.push({
         id: 'alt-cancel-sub',
-        title: `Offset with ${discSub.name} (Free up ₹${discSub.amount})`,
-        description: `Cancelling ${discSub.name} covers ${Math.round((discSub.amount / decision.amount) * 100)}% of this purchase automatically.`,
+        title: `Offset by Cancelling ${discSub.name} (+₹${discSub.amount})`,
+        description: `Cancelling ${discSub.name} permanently recovers ${Math.round((discSub.amount / decision.amount) * 100)}% of this purchase.`,
         adjustedAmount: decision.amount - discSub.amount,
         savedRupees: discSub.amount,
         actionType: 'cancel_sub',
         targetCommitmentId: discSub.id
       });
     }
+  } else if (decision.type === 'save_goal' && decision.amount > 1000) {
+    // Smart alternative for goal transfer: Split into two halves
+    const halfAmount = Math.round(decision.amount / 2);
+    smartAlternatives.push({
+      id: 'alt-split-goal',
+      title: `Transfer ₹${halfAmount} now, ₹${halfAmount} on Day 18`,
+      description: `Protects your daily flexible allowance at ₹${Math.round(before.dailyAllowance - (halfAmount / before.remainingDays))}/day while steadily building your cushion.`,
+      adjustedAmount: halfAmount,
+      savedRupees: decision.amount - halfAmount,
+      actionType: 'split_goal'
+    });
   }
 
   return {
