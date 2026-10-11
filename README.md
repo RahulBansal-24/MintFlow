@@ -1,4 +1,4 @@
-# MINTFLOW — Your Money. Your Moves. 🚀
+# MINTFLOW - Your Money. Your Moves. 💸
 
 > **"Every financial decision has a consequence. Understand it before you make it."**
 
@@ -7,7 +7,6 @@
 [![Vite](https://img.shields.io/badge/Vite-8.3-646CFF?style=flat-square&logo=vite&logoColor=white)](https://vitejs.dev/)
 [![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-3.4-38B2AC?style=flat-square&logo=tailwind-css&logoColor=white)](https://tailwindcss.com/)
 [![Vitest](https://img.shields.io/badge/Vitest-5.0-6E9F18?style=flat-square&logo=vitest&logoColor=white)](https://vitest.dev/)
-[![Evaluation Score](https://img.shields.io/badge/Evaluation_Score-92.6%2F100-65F5B4?style=flat-square&logo=checkmarx&logoColor=black)](https://github.com/RahulBansal-24/MintFlow)
 
 **MINTFLOW** is a high-polish, consumer-facing personal finance simulator and decision laboratory built specifically for Indian Gen Z college students, first-time earners, and young adults. Designed around a foundational ₹10,000 monthly budget over a 30-day financial cycle, MINTFLOW solves the pervasive problem of mid-month cash depletion through predictive consequence modeling, ring-fenced commitments, and real-time decision simulation.
 
@@ -15,43 +14,6 @@ Unlike conventional expense trackers that merely record past spending, MINTFLOW 
 
 > [!NOTE]  
 > **Educational Simulation Tool:** MINTFLOW is an interactive personal finance simulation and educational decision-support tool. It does not connect to real banking APIs, require bank credentials, or provide certified financial advisory services. All financial calculations run deterministically in the local browser environment.
-
----
-
-## 🧭 Table of Contents
-
-- [🚀 Project Title and Introduction](#mintflow--your-money-your-moves-)
-- [💡 Project Overview](#-project-overview)
-- [✨ Features in Detail](#-features-in-detail)
-- [🚦 Startup Modes & Testing Environment](#-startup-modes--testing-environment)
-  - [🎮 1. Seeded Demo Mode — Hackathon Experience](#-1-seeded-demo-mode--hackathon-experience)
-  - [🧪 Hackathon Test Lab — Inside Seeded Demo Mode](#-hackathon-test-lab--inside-seeded-demo-mode)
-  - [🌱 2. Clean State Mode — Start Fresh](#-2-clean-state-mode--start-fresh)
-  - [📊 3. Mode Comparison](#-3-mode-comparison)
-  - [🧭 4. Getting Started With Each Mode](#-4-getting-started-with-each-mode)
-- [🧮 Finance Engine: Mathematics and Logic](#-finance-engine-mathematics-and-logic)
-  - [Core Balance Equations](#core-balance-equations)
-  - [Daily Allowance Calculations](#daily-allowance-calculations)
-  - [Deterministic Forecast Model](#deterministic-forecast-model)
-  - [Financial Health Score Heuristic (0–100)](#financial-health-score-heuristic-0100)
-  - [Risk Classification Tiers](#risk-classification-tiers)
-  - [Accounting Rules & Invariants](#accounting-rules--invariants)
-- [🎮 Interactive Simulations & Decision Lab](#-interactive-simulations--decision-lab)
-- [🛠️ Technology Stack](#️-technology-stack)
-- [🏗️ Architecture and Code Organization](#️-architecture-and-code-organization)
-- [💻 Installation and Local Setup](#-installation-and-local-setup)
-- [🧑‍💻 How to Use MINTFLOW](#-how-to-use-mintflow)
-- [📸 Screenshots and Visual Walkthrough](#-screenshots-and-visual-walkthrough)
-- [📊 Example Financial Scenario](#-example-financial-scenario)
-- [🔐 Data Persistence and Privacy](#-data-persistence-and-privacy)
-- [🌐 Deployment](#-deployment)
-- [🎯 Use Cases](#-use-cases)
-- [⚖️ Limitations and Assumptions](#️-limitations-and-assumptions)
-- [🔮 Future Scope](#-future-scope)
-- [🤝 Contributing](#-contributing)
-- [👨‍💻 Author](#-author)
-- [🙌 Acknowledgements and License](#-acknowledgements-and-license)
-- [✨ Closing](#-closing)
 
 ---
 
@@ -361,19 +323,19 @@ Proposed Decision ──► [Deep Clone State] ──► [Recalculate Metrics] �
 
 | Technology | Version | Purpose in MINTFLOW | Rationale |
 |---|---|---|---|
-| **React** | `^19.2.8` | Component architecture & reactive UI | Latest declarative component model |
-| **TypeScript** | `~6.0.2` | Type-safe financial data contracts & engine | Prevents arithmetic & runtime schema errors |
-| **Vite** | `^8.3.0` | Build tool, dev server, and bundler | Instant HMR and sub-second asset bundling |
-| **Tailwind CSS** | `^3.4.17` | Utility-first styling & custom fintech palette | Custom tokens (#080B12, mint, cyan, lavender) |
-| **Framer Motion** | `^14.1.0` | UI animations, orbital rotations & transitions | Fluid spring physics and smooth number changes |
-| **Recharts** | `^3.10.1` | Financial area forecasts & donut charts | Responsive SVG rendering for financial curves |
-| **Lucide React** | `^1.55.0` | Visual icon system | Consistent, lightweight iconography |
-| **Canvas Confetti**| `^1.9.4` | Milestone and confirmation celebration | Dopamine feedback for positive financial moves |
-| **Vitest** | `^5.0.3` | Unit testing framework | Sub-second testing of financial engine formulas |
+| ⚛️ **React** | `^19.2.8` | Component architecture & reactive UI | Latest declarative component model |
+| 🔷 **TypeScript** | `~6.0.2` | Type-safe financial data contracts & engine | Prevents arithmetic & runtime schema errors |
+| ⚡ **Vite** | `^8.3.0` | Build tool, dev server, and bundler | Instant HMR and sub-second asset bundling |
+| 🎨 **Tailwind CSS** | `^3.4.17` | Utility-first styling & custom fintech palette | Custom tokens (#080B12, mint, cyan, lavender) |
+| 🎞️ **Framer Motion** | `^14.1.0` | UI animations, orbital rotations & transitions | Fluid spring physics and smooth number changes |
+| 📈 **Recharts** | `^3.10.1` | Financial area forecasts & donut charts | Responsive SVG rendering for financial curves |
+| 🏷️ **Lucide React** | `^1.55.0` | Visual icon system | Consistent, lightweight iconography |
+| 🎉 **Canvas Confetti**| `^1.9.4` | Milestone and confirmation celebration | Dopamine feedback for positive financial moves |
+| 🧪 **Vitest** | `^5.0.3` | Unit testing framework | Sub-second testing of financial engine formulas |
 
 ---
 
-## 🏗️ Architecture and Code Organization
+## 📁 Project Structure
 
 ```
 mintflow/
@@ -479,19 +441,19 @@ npm run preview
 
 ## 🧑‍💻 How to Use MINTFLOW
 
-1. **Select Your Mode:** When opening MINTFLOW, choose **"Explore Demo"** to evaluate the Day 8 scenario or **"Start Fresh"** to begin Day 1 with ₹10,000.
-2. **Read the Command Center:**
-   - Check **Total Available Cash** (in hand) vs. **Free Runway** (uncommitted).
-   - Review your **Daily Safe Allowance** (e.g., ₹218/day).
-3. **Inspect the Money Orbit:** Hover over satellites in the celestial model to view upcoming commitments and savings satellites.
-4. **Test a Decision:** Click **"Simulate Move"** or open the **Spend Simulator**:
-   - Drag the slider to test a purchase (e.g., ₹1,500).
-   - Review the Before vs. After matrix, verdict, and smart alternatives.
-   - Click **"Confirm Decision"** to commit it or **"Keep Exploring"** to discard.
-5. **Manage Commitments & Subscriptions:** Navigate to **Commitments & Subs** to view upcoming due dates, inspect subscription leakage, or mark bills as paid.
-6. **Track Goals:** Navigate to **Savings Goals** to add funds (+₹250) or create a new savings milestone.
-7. **Evaluate Health & Forecasts:** Navigate to **Health & Forecasts** to inspect the 30-day projection curves across Optimistic, Expected, and Conservative models.
-8. **Try Hackathon Demo Scenarios:** Click **"Demo Scenarios"** in the top navigation bar to test any of the 5 guided evaluation scenarios.
+1. 🚦 **Select Your Mode:** When opening MINTFLOW, choose **"Explore Demo"** to evaluate the Day 8 scenario or **"Start Fresh"** to begin Day 1 with ₹10,000.
+2. 📊 **Read the Command Center:**
+   - 💵 Check **Total Available Cash** (in hand) vs. **Free Runway** (uncommitted).
+   - 🛡️ Review your **Daily Safe Allowance** (e.g., ₹218/day).
+3. 🪐 **Inspect the Money Orbit:** Hover over satellites in the celestial model to view upcoming commitments and savings satellites.
+4. 🧪 **Test a Decision:** Click **"Simulate Move"** or open the **Spend Simulator**:
+   - 🎚️ Drag the slider to test a purchase (e.g., ₹1,500).
+   - ⚖️ Review the Before vs. After matrix, verdict, and smart alternatives.
+   - ✅ Click **"Confirm Decision"** to commit it or **"Keep Exploring"** to discard.
+5. 📅 **Manage Commitments & Subscriptions:** Navigate to **Commitments & Subs** to view upcoming due dates, inspect subscription leakage, or mark bills as paid.
+6. 🎯 **Track Goals:** Navigate to **Savings Goals** to add funds (+₹250) or create a new savings milestone.
+7. 📈 **Evaluate Health & Forecasts:** Navigate to **Health & Forecasts** to inspect the 30-day projection curves across Optimistic, Expected, and Conservative models.
+8. 🔬 **Try Hackathon Demo Scenarios:** Click **"Demo Scenarios"** in the top navigation bar to test any of the 5 guided evaluation scenarios.
 
 ---
 
@@ -550,24 +512,24 @@ npm run preview
 ## 📊 Example Financial Scenario
 
 Consider a student in **Seeded Demo Mode (Day 8 of 30)**:
-- **Available Cash:** ₹8,561
-- **Reserved Bills:** ₹1,338 (due on Days 12, 18, 24)
-- **Locked Savings:** ₹2,200
-- **Uncommitted Cash:** ₹5,023
-- **Remaining Days:** 23
-- **Daily Safe Allowance:** **₹218/day** ($\frac{5,023}{23}$)
+- 💰 **Available Cash:** ₹8,561
+- 🧾 **Reserved Bills:** ₹1,338 (due on Days 12, 18, 24)
+- 🔒 **Locked Savings:** ₹2,200
+- 🆓 **Uncommitted Cash:** ₹5,023
+- ⏳ **Remaining Days:** 23
+- 🛡️ **Daily Safe Allowance:** **₹218/day** ($\frac{5,023}{23}$)
 
 The student is tempted by an **impulse purchase of wireless earbuds for ₹1,500**:
-1. **Simulation Execution:**
-   - New Available Cash: $8,561 - 1,500 = \mathbf{₹7,061}$.
-   - New Uncommitted Cash: $5,023 - 1,500 = \mathbf{₹3,523}$.
-   - New Daily Allowance: $\frac{3,523}{23} = \mathbf{₹153/day}$ (a **-₹65/day** drop).
-   - Month-End Projected Balance: drops by ₹1,500.
-   - Health Score: drops from 78 to 74 pts (`Watchful`).
-2. **Simulator Feedback:**
-   - **Verdict:** *"Pinch Alert: Tight Daily Spending Allowance. Your flexible daily allowance drops from ₹218 to ₹153/day."*
-   - **Smart Alternative:** *"Pick Value Edition (₹900 instead of ₹1,500). Saves ₹600 upfront and keeps your daily allowance at ₹179/day."*
-3. **Outcome:** The student tests the value edition, sees that ₹179/day is manageable, and commits with full awareness rather than facing a week-three cash shortfall.
+1. 🧮 **Simulation Execution:**
+   - 💵 New Available Cash: $8,561 - 1,500 = \mathbf{₹7,061}$.
+   - 🆓 New Uncommitted Cash: $5,023 - 1,500 = \mathbf{₹3,523}$.
+   - 📉 New Daily Allowance: $\frac{3,523}{23} = \mathbf{₹153/day}$ (a **-₹65/day** drop).
+   - 📊 Month-End Projected Balance: drops by ₹1,500.
+   - 🩺 Health Score: drops from 78 to 74 pts (`Watchful`).
+2. ⚠️ **Simulator Feedback:**
+   - 🚨 **Verdict:** *"Pinch Alert: Tight Daily Spending Allowance. Your flexible daily allowance drops from ₹218 to ₹153/day."*
+   - 💡 **Smart Alternative:** *"Pick Value Edition (₹900 instead of ₹1,500). Saves ₹600 upfront and keeps your daily allowance at ₹179/day."*
+3. 🎯 **Outcome:** The student tests the value edition, sees that ₹179/day is manageable, and commits with full awareness rather than facing a week-three cash shortfall.
 
 ---
 
@@ -596,29 +558,29 @@ Client routing and static assets are self-contained without requiring edge funct
 
 ## 🎯 Use Cases
 
-1. **Student Monthly Budgeting:** Managing fixed monthly pocket money (₹10,000) across canteen food, metro travel, and study stationery.
-2. **Impulse Purchase Check:** Previewing the long-term impact of a sale or weekend buy before committing.
-3. **Subscription Auditing:** Identifying discretionary monthly subscriptions (OTT, streaming) and calculating their annualized drag.
-4. **Emergency Preparedness:** Stress-testing sudden laptop, mobile, or medical repairs against upcoming bill deadlines.
-5. **Goal Runway Planning:** Visualizing the daily sacrifice required to afford aspirational gadgets or travel.
+- 🎓 **Student Monthly Budgeting:** Managing fixed monthly pocket money (₹10,000) across canteen food, metro travel, and study stationery.
+- 🛍️ **Impulse Purchase Check:** Previewing the long-term impact of a sale or weekend buy before committing.
+- 📺 **Subscription Auditing:** Identifying discretionary monthly subscriptions (OTT, streaming) and calculating their annualized drag.
+- 🚑 **Emergency Preparedness:** Stress-testing sudden laptop, mobile, or medical repairs against upcoming bill deadlines.
+- 🎒 **Goal Runway Planning:** Visualizing the daily sacrifice required to afford aspirational gadgets or travel.
 
 ---
 
 ## ⚖️ Limitations and Assumptions
 
-- **Fixed 30-Day Cycle:** The current prototype models a fixed 30-day budget window. Custom multi-month or weekly cycles are not currently supported.
-- **Heuristic Health Score:** The 0–100 Financial Health Score is an educational heuristic model designed for budget awareness, not an accredited credit rating or underwriting model.
-- **Manual Input:** Transactions and commitments are recorded manually or generated from the seed data; automated bank feeds are intentionally omitted for privacy.
+- 🗓️ **Fixed 30-Day Cycle:** The current prototype models a fixed 30-day budget window. Custom multi-month or weekly cycles are not currently supported.
+- 🩺 **Heuristic Health Score:** The 0–100 Financial Health Score is an educational heuristic model designed for budget awareness, not an accredited credit rating or underwriting model.
+- ✍️ **Manual Input:** Transactions and commitments are recorded manually or generated from the seed data; automated bank feeds are intentionally omitted for privacy.
 
 ---
 
 ## 🔮 Future Scope
 
-- **Exportable Reports:** One-click PDF/CSV monthly budget summaries and spending audits.
-- **Multi-Cycle Support:** Rolling calendar budgeting across multiple consecutive months.
-- **Custom Budget Limits:** Configurable baseline budgets (₹5,000, ₹15,000, ₹25,000) for different user segments.
-- **Offline PWA Support:** Service worker caching for full offline accessibility on mobile devices.
-- **SMS/UPI Receipt Parser:** Privacy-preserving on-device regex parser to auto-fill transaction amounts from local notification text.
+- 📄 **Exportable Reports:** One-click PDF/CSV monthly budget summaries and spending audits.
+- 🔄 **Multi-Cycle Support:** Rolling calendar budgeting across multiple consecutive months.
+- 🎚️ **Custom Budget Limits:** Configurable baseline budgets (₹5,000, ₹15,000, ₹25,000) for different user segments.
+- 📱 **Offline PWA Support:** Service worker caching for full offline accessibility on mobile devices.
+- 📲 **SMS/UPI Receipt Parser:** Privacy-preserving on-device regex parser to auto-fill transaction amounts from local notification text.
 
 ---
 
@@ -626,41 +588,41 @@ Client routing and static assets are self-contained without requiring edge funct
 
 Contributions are welcome! Please follow these steps:
 
-1. **Fork** the repository: `https://github.com/RahulBansal-24/MintFlow`
-2. **Create a Feature Branch:**
+1. 🍴 **Fork** the repository: `https://github.com/RahulBansal-24/MintFlow`
+2. 🌿 **Create a Feature Branch:**
    ```bash
    git checkout -b feature/your-feature-name
    ```
-3. **Commit Your Changes:**
+3. 💾 **Commit Your Changes:**
    ```bash
    git commit -m "feat: add descriptive feature"
    ```
-4. **Run Verification:** Ensure tests and builds pass:
+4. 🧪 **Run Verification:** Ensure tests and builds pass:
    ```bash
    npm run build
    npx vitest run
    ```
-5. **Push and Open a Pull Request:** Push to your fork and open a PR against the `main` branch.
+5. 🚀 **Push and Open a Pull Request:** Push to your fork and open a PR against the `main` branch.
 
 ---
 
 ## 👨‍💻 Author
 
-**Rahul Bansal**  
-- **GitHub:** [@RahulBansal-24](https://github.com/RahulBansal-24)  
-- **Project Repository:** [https://github.com/RahulBansal-24/MintFlow](https://github.com/RahulBansal-24/MintFlow)
+<table align="center">
+  <tr>
+    <td align="center" width="100%">
+      <a href="https://github.com/RahulBansal-24">
+        <img src="https://github.com/RahulBansal-24.png" width="100px" alt="Rahul Bansal"/><br />
+        <sub><b>👨‍💻 Rahul Bansal</b></sub>
+      </a><br />
+      <p>🚀 Full-Stack Developer | 🤖 AI Developer</p>
+      <a href="mailto:itzrahulbansal24@gmail.com">📧 Email</a> • 
+      <a href="https://github.com/RahulBansal-24">🔗 GitHub</a> • 
+      <a href="https://www.linkedin.com/in/itsrahulbansal24">💼 LinkedIn</a>
+    </td>
+  </tr>
+</table>
 
 ---
 
-## 🙌 Acknowledgements and License
-
-- Built with React, Vite, Tailwind CSS, Framer Motion, and Recharts.
-- Developed for the vibe-coding fintech hackathon to pioneer intuitive personal finance modeling for Gen Z.
-- **License:** This repository currently has no specified open-source license. All rights are reserved by the author.
-
----
-
-## ✨ Closing
-
-> **MINTFLOW — Your Money. Your Moves.**  
-> *Make every rupee count. Model the future before you spend.* 🌟
+<p align="center">Made with 💚 for Gen Z Financial Literacy & Smart Money Decisions</p>
