@@ -18,6 +18,25 @@ interface RiskCalculationInput {
   projectedMonthEndBalance: number;
 }
 
+/**
+ * Calculates the rule-based Financial Health Score (0-100) and Risk Assessment.
+ *
+ * Scoring Model (Deterministic Weighted Heuristic):
+ * - Budget Discipline (30%): Compares observed average burn against sustainable daily budget pace.
+ * - Commitment Coverage (25%): Measures available cash ratio against unpaid upcoming obligations.
+ * - Savings Progress (20%): Evaluates goal completion ratio against targeted amounts.
+ * - Financial Runway (15%): Compares remaining days in cycle against days of cash runway at current burn.
+ * - Emergency Resilience (10%): Evaluates cushion funds against the emergency target.
+ *
+ * Risk Tiers:
+ * - Critical: Projected deficit, uncovered essential bills, or score < 45.
+ * - Elevated: Score < 65 or uncommitted buffer < ₹1,000.
+ * - Watchful: Score < 78 or daily allowance < ₹150.
+ * - Stable: Score >= 78 with positive projected surplus and full bill coverage.
+ *
+ * @param input - RiskCalculationInput with balances, burn rates, and cycle timelines.
+ * @returns RiskAssessment - Risk level, score (0-100), factor breakdowns, and actionable recommendations.
+ */
 export function calculateRiskAssessment(input: RiskCalculationInput): RiskAssessment {
   const {
     startingFunds,

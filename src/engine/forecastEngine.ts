@@ -13,6 +13,18 @@ export interface StrategyComparison {
   color: string;
 }
 
+/**
+ * Generates day-by-day month-end projection curves and 3 strategic comparisons.
+ *
+ * Trajectories:
+ * - Historical (Days 1 to currentDay): Cumulative actual cash balances.
+ * - Expected Pace (currentDay+1 to 30): Observed average daily variable burn + scheduled bill obligations.
+ * - Conservative: Expected variable burn escalated by 25% to model impulsive weekend spikes.
+ * - Optimistic: Expected variable burn trimmed by 20% to model mindful budgeting.
+ *
+ * @param state - The active FinancialState.
+ * @returns Object with chart points for Recharts area rendering and 3 strategy comparison cards.
+ */
 export function generateForecastData(state: FinancialState): {
   chartPoints: ForecastDayPoint[];
   strategies: StrategyComparison[];

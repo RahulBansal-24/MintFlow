@@ -9,6 +9,21 @@ import {
 import { calculateMetrics } from './financialEngine';
 import { formatINR } from './currency';
 
+/**
+ * Runs a pure, isolated what-if financial simulation without mutating real application state.
+ *
+ * Workflow:
+ * 1. Computes baseline metrics ('before') from the committed state.
+ * 2. Deep-clones currentState to guarantee strict sandbox isolation.
+ * 3. Applies the proposed decision (purchase, emergency, goal transfer, subscription cut, or bill pay).
+ * 4. Computes re-calculated metrics ('after') from the simulated state.
+ * 5. Generates deltas (available cash, daily allowance, month-end projection, health score).
+ * 6. Synthesizes a contextual verdict, consequence timeline, and smart actionable alternatives.
+ *
+ * @param currentState - The active FinancialState (remains completely untouched).
+ * @param decision - The proposed SimulationDecision parameters.
+ * @returns SimulationResult - Before/after metrics, deltas, verdict, timeline, and alternatives.
+ */
 export function simulateDecision(currentState: FinancialState, decision: SimulationDecision): SimulationResult {
   const before = calculateMetrics(currentState);
 

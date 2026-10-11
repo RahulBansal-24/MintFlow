@@ -19,12 +19,27 @@ export const ALL_CATEGORIES: TransactionCategory[] = [
   'other'
 ];
 
+/**
+ * Calculates unified financial metrics from the current application state.
+ *
+ * Core Accounting Invariants:
+ * 1. totalFunds = startingFunds + additionalIncome
+ * 2. availableCash = totalFunds - actualExpenses
+ *    (Money already physically spent leaves cash in hand).
+ * 3. uncommittedCash = availableCash - unpaidReservedCommitments - unspentGoalAllocations
+ *    (Reserved bills and saved goals are EARMARKED, not deducted twice from availableCash).
+ * 4. dailyAllowance = max(uncommittedCash, 0) / remainingDays
+ *    (Guarantees that spending this daily amount will not compromise reserved bills or savings).
+ *
+ * @param state - The central FinancialState (budget, cycle, transactions, commitments, goals).
+ * @returns CalculatedMetrics - Derived metrics including balances, allowances, burn rate, and health assessment.
+ */
 export function calculateMetrics(state: FinancialState): CalculatedMetrics {
   const { cycle, startingBudget, transactions, commitments, goals, emergencyReserveTarget, previousHealthScore } = state;
 
   const startingFunds = startingBudget;
 
-  // Additional income
+  // Additional income received (increases total cash pool)
   const additionalIncome = transactions
     .filter(t => t.type === 'income')
     .reduce((sum, t) => sum + t.amount, 0);
