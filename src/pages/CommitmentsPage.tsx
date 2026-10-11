@@ -33,13 +33,14 @@ export const CommitmentsPage: React.FC = () => {
 
   const handleAdd = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!name || !amount || Number(amount) <= 0) return;
+    const cleanAmount = Number(amount);
+    if (!name.trim() || !Number.isFinite(cleanAmount) || cleanAmount <= 0) return;
 
     addCommitment({
-      name,
-      amount: Number(amount),
+      name: name.trim().slice(0, 120),
+      amount: Math.round(cleanAmount),
       category,
-      dueDay,
+      dueDay: Math.min(30, Math.max(1, Math.round(dueDay))),
       isEssential,
       status: 'upcoming',
       isSubscription,

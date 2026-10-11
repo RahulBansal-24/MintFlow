@@ -180,9 +180,20 @@ export const MoneyOrbit: React.FC<{ onOpenSimulator?: () => void }> = ({ onOpenS
             >
               {/* Satellite node at the top of its orbit */}
               <div 
-                className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-auto cursor-pointer group"
+                role="button"
+                tabIndex={0}
+                aria-label={`${sat.label}: ${formatINR(sat.amount)}`}
+                className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-auto cursor-pointer group focus:outline-none"
                 onMouseEnter={() => setHoveredItem(sat)}
                 onMouseLeave={() => setHoveredItem(null)}
+                onFocus={() => setHoveredItem(sat)}
+                onBlur={() => setHoveredItem(null)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    if (onOpenSimulator) onOpenSimulator();
+                  }
+                }}
               >
                 {/* Counter-rotate icon so it stays upright */}
                 <motion.div
@@ -193,7 +204,7 @@ export const MoneyOrbit: React.FC<{ onOpenSimulator?: () => void }> = ({ onOpenS
                     ease: 'linear'
                   }}
                   whileHover={{ scale: 1.25 }}
-                  className="flex items-center justify-center w-8 h-8 rounded-full border shadow-lg backdrop-blur-md transition-all"
+                  className="flex items-center justify-center w-8 h-8 rounded-full border shadow-lg backdrop-blur-md transition-all group-focus:ring-2 group-focus:ring-mint"
                   style={{
                     backgroundColor: 'rgba(13, 18, 32, 0.9)',
                     borderColor: hoveredItem?.id === sat.id ? sat.color : `${sat.color}55`,
@@ -210,9 +221,18 @@ export const MoneyOrbit: React.FC<{ onOpenSimulator?: () => void }> = ({ onOpenS
 
       {/* Central Core: Balance Sun */}
       <motion.div
+        role="button"
+        tabIndex={0}
+        aria-label={`Available Cash: ${formatINR(metrics.availableCash)}. Click to launch spend simulator`}
         whileHover={{ scale: 1.05 }}
         onClick={onOpenSimulator}
-        className="relative z-10 flex flex-col items-center justify-center w-36 h-36 rounded-full bg-gradient-to-br from-[#111827] to-[#0A0E17] border-2 border-mint/40 shadow-glow-mint cursor-pointer group text-center p-3"
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            if (onOpenSimulator) onOpenSimulator();
+          }
+        }}
+        className="relative z-10 flex flex-col items-center justify-center w-36 h-36 rounded-full bg-gradient-to-br from-[#111827] to-[#0A0E17] border-2 border-mint/40 shadow-glow-mint cursor-pointer group text-center p-3 focus:outline-none focus:ring-2 focus:ring-mint"
       >
         {/* Core pulsing outer ring */}
         <div className="absolute inset-0 rounded-full border border-mint/30 animate-ping opacity-25 pointer-events-none" />

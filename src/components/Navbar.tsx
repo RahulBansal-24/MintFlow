@@ -3,14 +3,9 @@ import {
   Bell, 
   Sparkles, 
   Sliders, 
-  RotateCcw, 
   Menu, 
   X, 
-  Calendar, 
-  CheckCircle2, 
-  AlertTriangle,
-  Undo2,
-  Compass
+  Undo2
 } from 'lucide-react';
 import { useFinancial } from '../context/FinancialContext';
 import { NavigationPage } from './Sidebar';
@@ -141,7 +136,9 @@ export const Navbar: React.FC<NavbarProps> = ({
             <button
               type="button"
               onClick={() => setNotificationsOpen(!notificationsOpen)}
-              className="relative p-2 rounded-xl bg-background-card border border-white/10 text-slate-300 hover:text-white transition-colors"
+              aria-label="View commitment notifications"
+              aria-expanded={notificationsOpen}
+              className="relative p-2 rounded-xl bg-background-card border border-white/10 text-slate-300 hover:text-white transition-colors focus:outline-none focus:ring-2 focus:ring-mint"
             >
               <Bell className="w-4 h-4" />
               {upcomingBills.length > 0 && (

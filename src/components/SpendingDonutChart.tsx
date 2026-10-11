@@ -1,6 +1,6 @@
 import React from 'react';
 import { ResponsiveContainer, PieChart, Pie, Cell, Tooltip } from 'recharts';
-import { PieChart as PieIcon, ArrowRight } from 'lucide-react';
+import { PieChart as PieIcon } from 'lucide-react';
 import { useFinancial } from '../context/FinancialContext';
 import { TransactionCategory } from '../engine/types';
 import { formatINR } from '../engine/currency';
@@ -24,7 +24,7 @@ export const SpendingDonutChart: React.FC<SpendingDonutChartProps> = ({ onSelect
   const { metrics } = useFinancial();
 
   const data = Object.entries(metrics.categoryBreakdown)
-    .filter(([_, item]) => item.amount > 0)
+    .filter(([, item]) => item.amount > 0)
     .map(([cat, item]) => ({
       name: cat.charAt(0).toUpperCase() + cat.slice(1),
       category: cat as TransactionCategory,

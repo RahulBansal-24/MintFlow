@@ -48,13 +48,48 @@ export function loadFinancialState(): FinancialState {
       return mode === 'fresh' ? FRESH_START_FINANCIAL_STATE : INITIAL_FINANCIAL_STATE;
     }
     const parsed = JSON.parse(raw);
-    if (parsed && parsed.cycle && Array.isArray(parsed.transactions) && Array.isArray(parsed.commitments)) {
-      return parsed;
+    
+    // Strict schema validation to prevent malformed localStorage from breaking runtime
+    const isValidCycle = parsed && typeof parsed === 'object' && parsed.cycle &&
+      typeof parsed.cycle.currentDay === 'number' &&
+      Number.isFinite(parsed.cycle.currentDay) &&
+      parsed.cycle.currentDay >= 1 &&
+      parsed.cycle.currentDay <= 30;
+
+    const isValidStartingBudget = typeof parsed?.startingBudget === 'number' &&
+      Number.isFinite(parsed.startingBudget) &&
+      parsed.startingBudget > 0;
+
+    const isValidTransactions = Array.isArray(parsed?.transactions) &&
+      parsed.transactions.every((t: any) =>
+        t && typeof t.id === 'string' &&
+        typeof t.amount === 'number' && Number.isFinite(t.amount) && t.amount >= 0 &&
+        typeof t.description === 'string'
+      );
+
+    const isValidCommitments = Array.isArray(parsed?.commitments) &&
+      parsed.commitments.every((c: any) =>
+        c && typeof c.id === 'string' &&
+        typeof c.amount === 'number' && Number.isFinite(c.amount) && c.amount >= 0 &&
+        typeof c.name === 'string'
+      );
+
+    const isValidGoals = Array.isArray(parsed?.goals) &&
+      parsed.goals.every((g: any) =>
+        g && typeof g.id === 'string' &&
+        typeof g.targetAmount === 'number' && Number.isFinite(g.targetAmount) &&
+        typeof g.savedAmount === 'number' && Number.isFinite(g.savedAmount)
+      );
+
+    if (isValidCycle && isValidStartingBudget && isValidTransactions && isValidCommitments && isValidGoals) {
+      return parsed as FinancialState;
     }
+
+    console.warn('MINTFLOW: Stored financial state schema mismatch or corruption detected. Safely initializing active mode baseline.');
     const mode = loadProfileMode();
     return mode === 'fresh' ? FRESH_START_FINANCIAL_STATE : INITIAL_FINANCIAL_STATE;
   } catch (err) {
-    console.error('Failed to parse stored financial state, falling back:', err);
+    console.error('Failed to parse stored financial state, safely falling back to baseline:', err);
     return INITIAL_FINANCIAL_STATE;
   }
 }

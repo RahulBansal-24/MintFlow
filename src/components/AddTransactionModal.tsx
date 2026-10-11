@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { X, Plus, DollarSign, Tag, Calendar, FileText } from 'lucide-react';
+import { X } from 'lucide-react';
 import { useFinancial } from '../context/FinancialContext';
 import { TransactionCategory, TransactionType } from '../engine/types';
 
@@ -23,17 +23,18 @@ export const AddTransactionModal: React.FC<AddTransactionModalProps> = ({ isOpen
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!description || !amount || Number(amount) <= 0) return;
+    const cleanAmount = Number(amount);
+    if (!description.trim() || !Number.isFinite(cleanAmount) || cleanAmount <= 0) return;
 
     addTransaction({
-      description,
-      amount: Number(amount),
+      description: description.trim().slice(0, 120),
+      amount: Math.round(cleanAmount),
       category,
       type,
       date: `Day ${day}`,
-      day,
+      day: Math.min(30, Math.max(1, Math.round(day))),
       isEssential,
-      notes: notes || undefined
+      notes: notes.trim().slice(0, 200) || undefined
     });
 
     onClose();
@@ -44,7 +45,12 @@ export const AddTransactionModal: React.FC<AddTransactionModalProps> = ({ isOpen
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md">
+    <div 
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="record-tx-title"
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md"
+    >
       <motion.div
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
@@ -52,8 +58,13 @@ export const AddTransactionModal: React.FC<AddTransactionModalProps> = ({ isOpen
         className="relative w-full max-w-md rounded-2xl bg-gradient-to-b from-[#0D1220] to-[#080B12] border border-white/10 p-6 shadow-2xl space-y-4"
       >
         <div className="flex items-center justify-between pb-3 border-b border-white/[0.08]">
-          <h3 className="text-base font-heading font-bold text-white">Record Transaction</h3>
-          <button onClick={onClose} className="p-1 text-slate-400 hover:text-white transition-colors">
+          <h3 id="record-tx-title" className="text-base font-heading font-bold text-white">Record Transaction</h3>
+          <button 
+            type="button"
+            onClick={onClose} 
+            aria-label="Close transaction modal"
+            className="p-1 text-slate-400 hover:text-white transition-colors rounded-lg focus:outline-none focus:ring-2 focus:ring-mint"
+          >
             <X className="w-5 h-5" />
           </button>
         </div>

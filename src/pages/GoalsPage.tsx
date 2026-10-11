@@ -18,12 +18,13 @@ export const GoalsPage: React.FC = () => {
 
   const handleCreate = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newName || !newTarget || Number(newTarget) <= 0) return;
+    const cleanTarget = Number(newTarget);
+    if (!newName.trim() || !Number.isFinite(cleanTarget) || cleanTarget <= 0) return;
 
     addGoal({
-      name: newName,
-      targetAmount: Number(newTarget),
-      targetDay: newDay,
+      name: newName.trim().slice(0, 120),
+      targetAmount: Math.round(cleanTarget),
+      targetDay: Math.min(30, Math.max(1, Math.round(newDay))),
       icon: newIcon,
       status: 'active'
     });

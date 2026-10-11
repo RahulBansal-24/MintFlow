@@ -1,5 +1,5 @@
 import React from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { 
   Sparkles, 
   X, 
@@ -8,9 +8,7 @@ import {
   Tv, 
   ArrowRight, 
   RotateCcw,
-  Layers,
   PiggyBank,
-  CheckCircle2,
   CalendarClock
 } from 'lucide-react';
 import { useFinancial } from '../context/FinancialContext';
@@ -121,7 +119,12 @@ export const GuidedDemoModal: React.FC<GuidedDemoModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-md overflow-y-auto">
+    <div 
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="guided-demo-title"
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-md overflow-y-auto"
+    >
       <motion.div
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
@@ -135,7 +138,7 @@ export const GuidedDemoModal: React.FC<GuidedDemoModalProps> = ({
               <Sparkles className="w-5 h-5" />
             </div>
             <div>
-              <h3 className="text-lg font-heading font-bold text-white">Hackathon Demo Scenarios</h3>
+              <h3 id="guided-demo-title" className="text-lg font-heading font-bold text-white">Hackathon Demo Scenarios</h3>
               <p className="text-xs text-slate-400">
                 5 interactive decision labs showing interconnected financial consequences in real-time.
               </p>
@@ -143,8 +146,10 @@ export const GuidedDemoModal: React.FC<GuidedDemoModalProps> = ({
           </div>
 
           <button
+            type="button"
             onClick={onClose}
-            className="p-1 rounded-lg text-slate-400 hover:text-white transition-colors"
+            aria-label="Close guided demo modal"
+            className="p-1 rounded-lg text-slate-400 hover:text-white transition-colors focus:outline-none focus:ring-2 focus:ring-mint"
           >
             <X className="w-5 h-5" />
           </button>

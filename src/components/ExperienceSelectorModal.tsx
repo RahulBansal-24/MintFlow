@@ -21,7 +21,12 @@ export const ExperienceSelectorModal: React.FC<ExperienceSelectorModalProps> = (
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-md">
+    <div 
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="mode-modal-title"
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-md"
+    >
       <motion.div
         initial={{ opacity: 0, scale: 0.94 }}
         animate={{ opacity: 1, scale: 1 }}
@@ -34,7 +39,7 @@ export const ExperienceSelectorModal: React.FC<ExperienceSelectorModalProps> = (
             <Sparkles className="w-3.5 h-3.5" />
             <span>MINTFLOW • Choose Your Starting Mode</span>
           </div>
-          <h2 className="text-2xl sm:text-3xl font-heading font-extrabold text-white tracking-tight">
+          <h2 id="mode-modal-title" className="text-2xl sm:text-3xl font-heading font-extrabold text-white tracking-tight">
             How would you like to begin?
           </h2>
           <p className="text-xs sm:text-sm text-slate-300 max-w-lg mx-auto">
@@ -46,8 +51,12 @@ export const ExperienceSelectorModal: React.FC<ExperienceSelectorModalProps> = (
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 pt-2">
           {/* OPTION 1: Explore Demo (Recommended) */}
           <div 
+            role="button"
+            tabIndex={0}
             onClick={() => handleSelect('demo')}
-            className="relative p-5 rounded-2xl bg-gradient-to-b from-mint/10 via-[#111827] to-[#0D1220] border-2 border-mint/50 hover:border-mint shadow-glow-mint flex flex-col justify-between gap-4 cursor-pointer group transition-all transform hover:-translate-y-1"
+            onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handleSelect('demo'); } }}
+            aria-label="Explore Demo Mode: Day 8 of 30 seeded scenario"
+            className="relative p-5 rounded-2xl bg-gradient-to-b from-mint/10 via-[#111827] to-[#0D1220] border-2 border-mint/50 hover:border-mint focus:outline-none focus:ring-2 focus:ring-mint shadow-glow-mint flex flex-col justify-between gap-4 cursor-pointer group transition-all transform hover:-translate-y-1"
           >
             {/* Recommended Pill */}
             <div className="absolute -top-3 right-4 px-2.5 py-0.5 rounded-full bg-mint text-black font-heading font-bold text-[10px] tracking-wider uppercase shadow-md">
@@ -95,8 +104,12 @@ export const ExperienceSelectorModal: React.FC<ExperienceSelectorModalProps> = (
 
           {/* OPTION 2: Start Fresh */}
           <div 
+            role="button"
+            tabIndex={0}
             onClick={() => handleSelect('fresh')}
-            className="relative p-5 rounded-2xl bg-gradient-to-b from-cyan/5 via-[#111827] to-[#0D1220] border border-white/15 hover:border-cyan/50 flex flex-col justify-between gap-4 cursor-pointer group transition-all transform hover:-translate-y-1"
+            onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handleSelect('fresh'); } }}
+            aria-label="Start Fresh Mode: Day 1 of 30 clean slate with 10,000 rupee budget"
+            className="relative p-5 rounded-2xl bg-gradient-to-b from-cyan/5 via-[#111827] to-[#0D1220] border border-white/15 hover:border-cyan/50 focus:outline-none focus:ring-2 focus:ring-cyan flex flex-col justify-between gap-4 cursor-pointer group transition-all transform hover:-translate-y-1"
           >
             <div className="space-y-3">
               <div className="flex items-center gap-2.5">

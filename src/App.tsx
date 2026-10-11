@@ -105,7 +105,12 @@ const MainAppContent: React.FC = () => {
 
       {/* 5. Global Spend Simulator Overlay Modal */}
       {simulatorModalDecision && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md overflow-y-auto">
+        <div 
+          role="dialog"
+          aria-modal="true"
+          aria-label="Spend Simulator & Decision Lab"
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md overflow-y-auto"
+        >
           <div className="w-full max-w-5xl my-8">
             <SpendSimulatorView
               isModal={true}

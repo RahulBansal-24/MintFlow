@@ -5,8 +5,7 @@ import {
   Transaction, 
   Commitment, 
   SavingsGoal, 
-  SimulationDecision, 
-  SimulationResult,
+  SimulationDecision,
   ForecastDayPoint
 } from '../engine/types';
 import { calculateMetrics } from '../engine/financialEngine';
@@ -20,7 +19,6 @@ import {
   saveProfileMode, 
   ProfileMode 
 } from '../engine/storage';
-import { simulateDecision } from '../engine/scenarioEngine';
 
 interface FinancialContextType {
   state: FinancialState;
@@ -101,21 +99,40 @@ export const FinancialProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   // Transaction Actions
   const addTransaction = useCallback((tx: Omit<Transaction, 'id'>) => {
     saveHistorySnapshot();
+    const cleanAmount = Math.max(0, Math.round(Number(tx.amount) || 0));
+    const cleanDay = Math.min(30, Math.max(1, Math.round(Number(tx.day) || state.cycle.currentDay)));
+    const cleanDesc = (tx.description || 'Transaction').trim().slice(0, 120);
+
     const newTx: Transaction = {
       ...tx,
+      description: cleanDesc,
+      amount: cleanAmount,
+      day: cleanDay,
+      date: `Day ${cleanDay}`,
+      notes: tx.notes ? tx.notes.trim().slice(0, 200) : undefined,
       id: 'tx-' + Date.now() + '-' + Math.random().toString(36).substr(2, 4)
     };
     setState(prev => ({
       ...prev,
       transactions: [newTx, ...prev.transactions]
     }));
-  }, [saveHistorySnapshot]);
+  }, [saveHistorySnapshot, state.cycle.currentDay]);
 
   const editTransaction = useCallback((id: string, updates: Partial<Transaction>) => {
     saveHistorySnapshot();
     setState(prev => ({
       ...prev,
-      transactions: prev.transactions.map(t => t.id === id ? { ...t, ...updates } : t)
+      transactions: prev.transactions.map(t => {
+        if (t.id !== id) return t;
+        const cleanAmount = updates.amount !== undefined ? Math.max(0, Math.round(Number(updates.amount) || 0)) : t.amount;
+        const cleanDesc = updates.description !== undefined ? updates.description.trim().slice(0, 120) : t.description;
+        return {
+          ...t,
+          ...updates,
+          amount: cleanAmount,
+          description: cleanDesc
+        };
+      })
     }));
   }, [saveHistorySnapshot]);
 
@@ -130,8 +147,15 @@ export const FinancialProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   // Commitment Actions
   const addCommitment = useCallback((comm: Omit<Commitment, 'id'>) => {
     saveHistorySnapshot();
+    const cleanAmount = Math.max(0, Math.round(Number(comm.amount) || 0));
+    const cleanDueDay = Math.min(30, Math.max(1, Math.round(Number(comm.dueDay) || 15)));
+    const cleanName = (comm.name || 'Commitment').trim().slice(0, 120);
+
     const newComm: Commitment = {
       ...comm,
+      name: cleanName,
+      amount: cleanAmount,
+      dueDay: cleanDueDay,
       id: 'comm-' + Date.now()
     };
     setState(prev => ({
@@ -199,8 +223,15 @@ export const FinancialProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   // Goals Actions
   const addGoal = useCallback((goal: Omit<SavingsGoal, 'id' | 'savedAmount'>) => {
     saveHistorySnapshot();
+    const cleanTarget = Math.max(100, Math.round(Number(goal.targetAmount) || 1000));
+    const cleanDay = Math.min(30, Math.max(1, Math.round(Number(goal.targetDay) || 30)));
+    const cleanName = (goal.name || 'Savings Goal').trim().slice(0, 120);
+
     const newGoal: SavingsGoal = {
       ...goal,
+      name: cleanName,
+      targetAmount: cleanTarget,
+      targetDay: cleanDay,
       id: 'goal-' + Date.now(),
       savedAmount: 0
     };
@@ -211,18 +242,22 @@ export const FinancialProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   }, [saveHistorySnapshot]);
 
   const contributeToGoal = useCallback((id: string, amount: number) => {
+    const cleanAmount = Math.max(0, Math.round(Number(amount) || 0));
+    if (cleanAmount <= 0) return;
     saveHistorySnapshot();
     setState(prev => ({
       ...prev,
-      goals: prev.goals.map(g => g.id === id ? { ...g, savedAmount: g.savedAmount + amount } : g)
+      goals: prev.goals.map(g => g.id === id ? { ...g, savedAmount: g.savedAmount + cleanAmount } : g)
     }));
   }, [saveHistorySnapshot]);
 
   const withdrawFromGoal = useCallback((id: string, amount: number) => {
+    const cleanAmount = Math.max(0, Math.round(Number(amount) || 0));
+    if (cleanAmount <= 0) return;
     saveHistorySnapshot();
     setState(prev => ({
       ...prev,
-      goals: prev.goals.map(g => g.id === id ? { ...g, savedAmount: Math.max(0, g.savedAmount - amount) } : g)
+      goals: prev.goals.map(g => g.id === id ? { ...g, savedAmount: Math.max(0, g.savedAmount - cleanAmount) } : g)
     }));
   }, [saveHistorySnapshot]);
 

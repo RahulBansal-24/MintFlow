@@ -1,22 +1,12 @@
 import React, { useState, useMemo } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
 import { 
-  Zap, 
-  ArrowRight, 
-  CheckCircle, 
-  AlertTriangle, 
   Sparkles, 
   RotateCcw, 
-  CreditCard, 
-  DollarSign, 
-  ShieldAlert, 
-  PiggyBank, 
-  HelpCircle,
-  TrendingDown,
-  TrendingUp,
-  X,
-  Sliders,
-  Check
+  X, 
+  Sliders, 
+  Check, 
+  ArrowRight,
+  AlertTriangle
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { useFinancial } from '../context/FinancialContext';
@@ -43,7 +33,7 @@ export const SpendSimulatorView: React.FC<SpendSimulatorViewProps> = ({
   onClose,
   isModal = false 
 }) => {
-  const { state, commitSimulation, canUndo, undoLastAction } = useFinancial();
+  const { state, commitSimulation } = useFinancial();
 
   // Builder State
   const [decisionType, setDecisionType] = useState<DecisionType>(initialDecision?.type || 'buy_now');
